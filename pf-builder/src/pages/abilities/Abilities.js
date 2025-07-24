@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Box, MenuItem, Typography, FormControl, InputLabel, Card, CardContent } from '@mui/material';
+import { MenuItem, Typography, FormControl, InputLabel, Card, CardContent } from '@mui/material';
 import Select from '@mui/material/Select';
 
 export default function Abilities() {

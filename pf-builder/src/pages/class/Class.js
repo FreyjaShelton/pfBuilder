@@ -1,12 +1,18 @@
 import * as React from 'react';
-import { Box, MenuItem, Typography } from '@mui/material';
+import { Box, MenuItem, TextField, Typography } from '@mui/material';
 import CardSelector from '../../components/CardSelector';
+import { useCharacter } from '../../context/CharacterContext';
 
 export default function Class() {
-	const [selectedClass, setSelectedClass] = React.useState('');
+	const { character, updateClass } = useCharacter();
+	const selectedClass = character.classInfo.className;
 
 	const handleClassChange = (event) => {
-		setSelectedClass(event.target.value);
+		updateClass({ className: event.target.value });
+	};
+
+	const handleLevelChange = (event) => {
+		updateClass({ level: event.target.value });
 	};
 
 	const classInfo = {
@@ -50,6 +56,15 @@ export default function Class() {
 					</span>
 				)}
 			</CardSelector>
+			<Box sx={{ marginTop: 2, marginLeft: 2, marginRight: 2, maxWidth: 200 }}>
+				<TextField
+					label="Level"
+					type="number"
+					fullWidth
+					value={character.classInfo.level}
+					onChange={handleLevelChange}
+				/>
+			</Box>
 		</div>
 	);
 }

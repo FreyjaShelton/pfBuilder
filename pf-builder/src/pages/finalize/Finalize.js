@@ -1,9 +1,19 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { PDFDocument } from "pdf-lib";
 import characterSheet from './Pathfinder_en.pdf'
+import { useCharacter } from '../../context/CharacterContext';
+import { raceInfo } from '../race/Race';
+import { formatModifier } from '../../utils/abilityScore';
+
+const alignmentAbbreviations = {
+	'Lawful Good': 'LG', 'Neutral Good': 'NG', 'Chaotic Good': 'CG',
+	'Lawful Neutral': 'LN', 'True Neutral': 'N', 'Chaotic Neutral': 'CN',
+	'Lawful Evil': 'LE', 'Neutral Evil': 'NE', 'Chaotic Evil': 'CE',
+};
 
 const PdfEditor = () => {
 	const [pdfUrl, setPdfUrl] = useState(null);
+	const { character } = useCharacter();
 
 	const fillPdf = async () => {
 		// Fetch the existing PDF
@@ -18,31 +28,32 @@ const PdfEditor = () => {
 		const pages = pdfDoc.getPages();
 		const firstPage = pages[0];
 		const secondPage = pages[1];
-		const deity = "Deity";
+		const deity = character.info.deity || "";
 
 
 		// #region Page 1
 
 		// #region Character Info
-		firstPage.drawText("Character Name", {
+		firstPage.drawText(character.info.name || "", {
 			x: 240,
 			y: 730,
 			size: 14
 		});
 
-		firstPage.drawText("LG", {
+		firstPage.drawText(alignmentAbbreviations[character.info.alignment] || "", {
 			x: 380,
 			y: 730,
 			size: 14
 		});
 
-		firstPage.drawText("Player", {
+		firstPage.drawText(character.info.player || "", {
 			x: 425,
 			y: 730,
 			size: 14
 		});
 
-		firstPage.drawText("Character Level", {
+		// No dedicated "Class" field exists on this sheet, so Class + Level share the "Character Level" line.
+		firstPage.drawText(`${character.classInfo.className} ${character.classInfo.level}`.trim(), {
 			x: 240,
 			y: 711,
 			size: 10
@@ -54,55 +65,55 @@ const PdfEditor = () => {
 			size: 10
 		});
 
-		firstPage.drawText("Homeland", {
+		firstPage.drawText(character.info.homeland || "", {
 			x: 505,
 			y: 711,
 			size: 10
 		});
 
-		firstPage.drawText("Race", {
+		firstPage.drawText(character.race.name || "", {
 			x: 240,
 			y: 692,
 			size: 10
 		});
 
-		firstPage.drawText("Size", {
+		firstPage.drawText(raceInfo[character.race.name]?.size || "", {
 			x: 325,
 			y: 692,
 			size: 10
 		});
 
-		firstPage.drawText("F", {
+		firstPage.drawText(character.info.gender || "", {
 			x: 360,
 			y: 692,
 			size: 10
 		});
 
-		firstPage.drawText("Age", {
+		firstPage.drawText(character.info.age || "", {
 			x: 395,
 			y: 692,
 			size: 10
 		});
 
-		firstPage.drawText("Height", {
+		firstPage.drawText(character.info.height || "", {
 			x: 425,
 			y: 692,
 			size: 10
 		});
 
-		firstPage.drawText("Weight", {
+		firstPage.drawText(character.info.weight || "", {
 			x: 460,
 			y: 692,
 			size: 10
 		});
 
-		firstPage.drawText("Hair", {
+		firstPage.drawText(character.info.hair || "", {
 			x: 500,
 			y: 692,
 			size: 10
 		});
 
-		firstPage.drawText("Eyes", {
+		firstPage.drawText(character.info.eyes || "", {
 			x: 530,
 			y: 692,
 			size: 10
@@ -113,132 +124,133 @@ const PdfEditor = () => {
 		// #region Ability Scores
 
 		// STR
-		firstPage.drawText("10", {
+		firstPage.drawText(String(character.abilities.str || ""), {
 			x: 73,
 			y: 651,
 			size: 12
 		});
-		firstPage.drawText("10", {
+		firstPage.drawText(formatModifier(character.abilities.str), {
 			x: 100,
 			y: 651,
 			size: 12
 		});
-		firstPage.drawText("10", {
+		// Temp Score / Temp Modifier columns intentionally left blank — no UI yet for temporary ability adjustments.
+		firstPage.drawText("", {
 			x: 127,
 			y: 651,
 			size: 12
 		});
-		firstPage.drawText("10", {
+		firstPage.drawText("", {
 			x: 155,
 			y: 651,
 			size: 12
 		});
 
 		// DEX
-		firstPage.drawText("10", {
+		firstPage.drawText(String(character.abilities.dex || ""), {
 			x: 73,
 			y: 633,
 			size: 12
 		});
-		firstPage.drawText("10", {
+		firstPage.drawText(formatModifier(character.abilities.dex), {
 			x: 100,
 			y: 633,
 			size: 12
 		});
-		firstPage.drawText("10", {
+		firstPage.drawText("", {
 			x: 127,
 			y: 633,
 			size: 12
 		});
-		firstPage.drawText("10", {
+		firstPage.drawText("", {
 			x: 155,
 			y: 633,
 			size: 12
 		});
 
 		// CON
-		firstPage.drawText("10", {
+		firstPage.drawText(String(character.abilities.con || ""), {
 			x: 73,
 			y: 617,
 			size: 12
 		});
-		firstPage.drawText("10", {
+		firstPage.drawText(formatModifier(character.abilities.con), {
 			x: 100,
 			y: 617,
 			size: 12
 		});
-		firstPage.drawText("10", {
+		firstPage.drawText("", {
 			x: 127,
 			y: 617,
 			size: 12
 		});
-		firstPage.drawText("10", {
+		firstPage.drawText("", {
 			x: 155,
 			y: 617,
 			size: 12
 		});
 
 		// INT
-		firstPage.drawText("10", {
+		firstPage.drawText(String(character.abilities.int || ""), {
 			x: 73,
 			y: 600,
 			size: 12
 		});
-		firstPage.drawText("10", {
+		firstPage.drawText(formatModifier(character.abilities.int), {
 			x: 100,
 			y: 600,
 			size: 12
 		});
-		firstPage.drawText("10", {
+		firstPage.drawText("", {
 			x: 127,
 			y: 600,
 			size: 12
 		});
-		firstPage.drawText("10", {
+		firstPage.drawText("", {
 			x: 155,
 			y: 600,
 			size: 12
 		});
 
 		// WIS
-		firstPage.drawText("10", {
+		firstPage.drawText(String(character.abilities.wis || ""), {
 			x: 73,
 			y: 581,
 			size: 12
 		});
-		firstPage.drawText("10", {
+		firstPage.drawText(formatModifier(character.abilities.wis), {
 			x: 100,
 			y: 581,
 			size: 12
 		});
-		firstPage.drawText("10", {
+		firstPage.drawText("", {
 			x: 127,
 			y: 581,
 			size: 12
 		});
-		firstPage.drawText("10", {
+		firstPage.drawText("", {
 			x: 155,
 			y: 581,
 			size: 12
 		});
 
 		// CHA
-		firstPage.drawText("10", {
+		firstPage.drawText(String(character.abilities.cha || ""), {
 			x: 73,
 			y: 565,
 			size: 12
 		});
-		firstPage.drawText("10", {
+		firstPage.drawText(formatModifier(character.abilities.cha), {
 			x: 100,
 			y: 565,
 			size: 12
 		});
-		firstPage.drawText("10", {
+		firstPage.drawText("", {
 			x: 127,
 			y: 565,
 			size: 12
 		});
-		firstPage.drawText("10", {
+		firstPage.drawText("", {
 			x: 155,
 			y: 565,
 			size: 12
@@ -309,6 +321,9 @@ const PdfEditor = () => {
 			size: 12
 		});
 
+		// KNOWN BUG (pre-existing, out of scope for this phase): this draw duplicates the one
+		// immediately above at the same x/y — likely meant to be a different field. Investigate
+		// when the Character Stats region gets wired to real data.
 		// AC
 		firstPage.drawText("AC", {
 			x: 73,
@@ -1934,6 +1949,8 @@ const PdfEditor = () => {
 			size: 14
 		});
 
+		// KNOWN BUG (pre-existing, out of scope for this phase): this 6th row is missing its
+		// "Item N" name draw (present on all 5 rows above) — fix when this region gets real data.
 		secondPage.drawText("0", {
 			x: 160,
 			y: 618,
@@ -3003,16 +3020,22 @@ const PdfEditor = () => {
 		setPdfUrl(pdfUrl);
 	};
 
+	useEffect(() => {
+		fillPdf();
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, []);
+
 	return (
 		<div>
-			<button onClick={fillPdf}>Fill PDF</button>
-			{pdfUrl && (
+			{pdfUrl ? (
 				<iframe
 					src={pdfUrl}
 					width="100%"
 					height="500px"
 					title="Filled PDF"
 				/>
+			) : (
+				<p>Generating character sheet...</p>
 			)}
 		</div>
 	);

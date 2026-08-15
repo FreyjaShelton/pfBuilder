@@ -12,6 +12,7 @@ import Skills from './pages/skills/Skills';
 import Abilities from './pages/abilities/Abilities';
 import Equipment from './pages/equipment/Equipment';
 import Finalize from './pages/finalize/Finalize';
+import { CharacterProvider } from './context/CharacterContext';
 import {
 	createHashRouter,
 	RouterProvider,
@@ -64,8 +65,10 @@ const router = createHashRouter([
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
 	<React.StrictMode>
-		<RouterProvider router={router} />
-		<Footer />
+		<CharacterProvider>
+			<RouterProvider router={router} />
+			<Footer />
+		</CharacterProvider>
 	</React.StrictMode>
 );
 

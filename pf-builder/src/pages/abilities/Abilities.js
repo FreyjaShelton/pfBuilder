@@ -1,45 +1,204 @@
 import * as React from 'react';
-import { Box, MenuItem, Typography, FormControl, InputLabel, Card, CardContent } from '@mui/material';
-import Select from '@mui/material/Select';
+import { Box, Button, FormControl, InputLabel, MenuItem, Select, Typography } from '@mui/material';
+import CardSelector from '../../components/CardSelector';
+import { useCharacter } from '../../context/CharacterContext';
+import {
+	STANDARD_ARRAY,
+	POINT_BUY_COSTS,
+	CAMPAIGN_POINT_BUDGETS,
+	formatModifier,
+	rollSixAbilityScores,
+	getAvailableOptions,
+} from '../../utils/abilityScore';
+
+const abilityFields = [
+	{ key: 'str', label: 'Strength' },
+	{ key: 'dex', label: 'Dexterity' },
+	{ key: 'con', label: 'Constitution' },
+	{ key: 'int', label: 'Intelligence' },
+	{ key: 'wis', label: 'Wisdom' },
+	{ key: 'cha', label: 'Charisma' },
+];
+
+function AbilityRow({ label, score, control, extra }) {
+	return (
+		<Box sx={{ display: 'flex', alignItems: 'center', gap: 2, marginTop: 1 }}>
+			<Typography sx={{ width: 140 }}>{label}</Typography>
+			{control}
+			<Typography sx={{ width: 40 }} variant="body2">{formatModifier(score)}</Typography>
+			{extra}
+		</Box>
+	);
+}
 
 export default function Abilities() {
-	const [selection, setSelection] = React.useState('');
-
-	const handleChange = (event) => {
-		setSelection(event.target.value);
+	const { character, updateAbilities } = useCharacter();
+	const { abilities } = character;
+	const currentScores = {
+		str: abilities.str, dex: abilities.dex, con: abilities.con,
+		int: abilities.int, wis: abilities.wis, cha: abilities.cha,
 	};
 
+	const handleMethodChange = (event) => {
+		updateAbilities({
+			generationMethod: event.target.value,
+			str: '', dex: '', con: '', int: '', wis: '', cha: '',
+		});
+	};
 
+	const handleAssignChange = (key) => (event) => {
+		const value = event.target.value;
+		updateAbilities({ [key]: value === '' ? '' : Number(value) });
+	};
+
+	const handleRoll = () => {
+		updateAbilities({
+			rolls: rollSixAbilityScores(),
+			str: '', dex: '', con: '', int: '', wis: '', cha: '',
+		});
+	};
+
+	const handleCampaignChange = (event) => {
+		updateAbilities({
+			pointBuyCampaign: event.target.value,
+			str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10,
+		});
+	};
+
+	const handlePointBuyChange = (key) => (event) => {
+		updateAbilities({ [key]: Number(event.target.value) });
+	};
+
+	const renderAssignmentRows = (pool) => (
+		abilityFields.map(({ key, label }) => {
+			const options = getAvailableOptions(pool, currentScores, key);
+			return (
+				<AbilityRow
+					key={key}
+					label={label}
+					score={abilities[key]}
+					control={
+						<FormControl sx={{ minWidth: 100 }} size="small">
+							<Select value={abilities[key]} displayEmpty onChange={handleAssignChange(key)}>
+								<MenuItem value=""><em>—</em></MenuItem>
+								{options.map((v) => (
+									<MenuItem key={v} value={v}>{v}</MenuItem>
+								))}
+							</Select>
+						</FormControl>
+					}
+				/>
+			);
+		})
+	);
+
+	const pointBuyBudget = CAMPAIGN_POINT_BUDGETS[abilities.pointBuyCampaign];
+	const pointBuySpent = abilityFields.reduce((sum, { key }) => {
+		const score = abilities[key];
+		return sum + (POINT_BUY_COSTS[score] ?? 0);
+	}, 0);
+	const pointBuyRemaining = pointBuyBudget !== undefined ? pointBuyBudget - pointBuySpent : undefined;
 
 	return (
 		<div>
-			<Card>
-				<CardContent>
-					<Typography variant="body2">
-						Ability Scores
-					</Typography>
-					<br />
-					<FormControl fullWidth>
-						<InputLabel>Choose a generation method</InputLabel>
-						<Select
-							label="Choose a generation method"
-							onChange={handleChange}
-						>
-							<MenuItem value={10}>Standard Array</MenuItem>
-							<MenuItem value={20}>Point Buy</MenuItem>
-							<MenuItem value={30}>Manual/Rolled</MenuItem>
-						</Select>
-					</FormControl>
-					{selection && (
-						<span>
-							<Typography variant="body2" sx={{ marginTop: 1 }}>
-								{selection}
-							</Typography>
-						</span>
-					)}
-				</CardContent>
-			</Card>
+			<Box sx={{ marginTop: 2, marginLeft: 2, marginRight: 2 }}>
+				<Typography variant="body2">
+					Ability Scores
+				</Typography>
+			</Box>
+			<CardSelector
+				title={"Choose a generation method"}
+				value={abilities.generationMethod}
+				onChange={handleMethodChange}
+			>
+				<MenuItem value={'Standard Array'}>Standard Array</MenuItem>
+				<MenuItem value={'Point Buy'}>Point Buy</MenuItem>
+				<MenuItem value={'Manual/Rolled'}>Manual/Rolled</MenuItem>
 
+				{abilities.generationMethod === 'Standard Array' && (
+					<span>
+						<Typography variant="body2">
+							Assign each score to an ability: {STANDARD_ARRAY.join(', ')}
+						</Typography>
+						{renderAssignmentRows(STANDARD_ARRAY)}
+					</span>
+				)}
+
+				{abilities.generationMethod === 'Manual/Rolled' && (
+					<span>
+						<Typography variant="body2">
+							Roll 4d6, drop the lowest die, and add the rest — six times. Assign each total to an ability afterward.
+						</Typography>
+						<Button variant="outlined" size="small" sx={{ marginTop: 1 }} onClick={handleRoll}>
+							{abilities.rolls.length ? 'Reroll' : 'Roll Scores'}
+						</Button>
+						{abilities.rolls.length > 0 && (
+							<>
+								<Typography variant="body2" sx={{ marginTop: 1 }}>
+									Rolled: {abilities.rolls.join(', ')}
+								</Typography>
+								{renderAssignmentRows(abilities.rolls)}
+							</>
+						)}
+					</span>
+				)}
+
+				{abilities.generationMethod === 'Point Buy' && (
+					<span>
+						<FormControl sx={{ minWidth: 220 }} size="small">
+							<InputLabel>Campaign Type</InputLabel>
+							<Select label="Campaign Type" value={abilities.pointBuyCampaign} onChange={handleCampaignChange}>
+								{Object.entries(CAMPAIGN_POINT_BUDGETS).map(([name, points]) => (
+									<MenuItem key={name} value={name}>{name} ({points} points)</MenuItem>
+								))}
+							</Select>
+						</FormControl>
+
+						{abilities.pointBuyCampaign && (
+							<>
+								<Typography
+									variant="body2"
+									sx={{ marginTop: 1, color: pointBuyRemaining < 0 ? 'error.main' : 'text.primary' }}
+								>
+									Points remaining: {pointBuyRemaining} / {pointBuyBudget}
+								</Typography>
+								{abilityFields.map(({ key, label }) => {
+									const spentWithoutKey = pointBuySpent - (POINT_BUY_COSTS[abilities[key]] ?? 0);
+									const currentCost = POINT_BUY_COSTS[abilities[key]] ?? 0;
+									return (
+										<AbilityRow
+											key={key}
+											label={label}
+											score={abilities[key]}
+											extra={
+												<Typography sx={{ width: 70 }} variant="caption" color="text.secondary">
+													{currentCost >= 0 ? '+' : ''}{currentCost} pts
+												</Typography>
+											}
+											control={
+												<FormControl sx={{ minWidth: 150 }} size="small">
+													<Select value={abilities[key]} onChange={handlePointBuyChange(key)}>
+														{Object.keys(POINT_BUY_COSTS).map((scoreStr) => {
+															const score = Number(scoreStr);
+															const cost = POINT_BUY_COSTS[score];
+															const affordable = score === abilities[key] || spentWithoutKey + cost <= pointBuyBudget;
+															return (
+																<MenuItem key={score} value={score} disabled={!affordable}>
+																	{score} ({cost >= 0 ? '+' : ''}{cost} pts)
+																</MenuItem>
+															);
+														})}
+													</Select>
+												</FormControl>
+											}
+										/>
+									);
+								})}
+							</>
+						)}
+					</span>
+				)}
+			</CardSelector>
 		</div>
 	);
 }

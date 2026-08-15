@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Box, Card, CardContent, CircularProgress, Typography } from "@mui/material";
 import { PDFDocument } from "pdf-lib";
 import characterSheet from './Pathfinder_en.pdf'
 import { useCharacter } from '../../context/CharacterContext';
@@ -7,6 +8,7 @@ import { formatModifier, getModifier } from '../../utils/abilityScore';
 import { getRacialModifiers } from '../../utils/raceModifiers';
 import classesData from '../../data/classes';
 import skillsList from '../../data/skills';
+import PageHeader from '../../components/PageHeader';
 
 const alignmentAbbreviations = {
 	'Lawful Good': 'LG', 'Neutral Good': 'NG', 'Chaotic Good': 'CG',
@@ -3055,18 +3057,35 @@ const PdfEditor = () => {
 	}, []);
 
 	return (
-		<div>
-			{pdfUrl ? (
-				<iframe
-					src={pdfUrl}
-					width="100%"
-					height="500px"
-					title="Filled PDF"
-				/>
-			) : (
-				<p>Generating character sheet...</p>
-			)}
-		</div>
+		<>
+			<PageHeader
+				eyebrow="Step 7 of 7"
+				title="Finalize"
+				subtitle="Your character sheet, filled out automatically from everything you've entered."
+			/>
+			<Card sx={{ backgroundColor: 'background.paper' }}>
+				<CardContent sx={{ padding: 3 }}>
+					{pdfUrl ? (
+						<Box sx={{ border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: 2, overflow: 'hidden' }}>
+							<iframe
+								src={pdfUrl}
+								width="100%"
+								height="700px"
+								style={{ border: 'none', display: 'block' }}
+								title="Filled PDF"
+							/>
+						</Box>
+					) : (
+						<Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, padding: 6 }}>
+							<CircularProgress size={32} />
+							<Typography variant="body2" sx={{ color: 'text.secondary' }}>
+								Generating character sheet...
+							</Typography>
+						</Box>
+					)}
+				</CardContent>
+			</Card>
+		</>
 	);
 };
 

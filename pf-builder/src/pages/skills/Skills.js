@@ -10,6 +10,7 @@ import { getRacialModifiers } from '../../utils/raceModifiers';
 import classesData from '../../data/classes';
 import racesData from '../../data/races';
 import skillsList from '../../data/skills';
+import PageHeader from '../../components/PageHeader';
 
 const abilityLabels = { str: 'STR', dex: 'DEX', con: 'CON', int: 'INT', wis: 'WIS', cha: 'CHA' };
 
@@ -53,28 +54,44 @@ export default function Skills() {
 	};
 
 	return (
-		<div>
-			<Card sx={{ backgroundColor: 'transparent', marginTop: 2, marginLeft: 2, marginRight: 2 }}>
-				<CardContent>
-					<Typography gutterBottom variant="h6" component="div">
-						Skills
-					</Typography>
-
+		<>
+			<PageHeader
+				eyebrow="Step 5 of 7"
+				title="Skills"
+				subtitle="Spend your skill points — class skills get a +3 bonus once you invest a rank."
+			/>
+			<Card sx={{ backgroundColor: 'background.paper' }}>
+				<CardContent sx={{ padding: { xs: 1.5, sm: 3 } }}>
 					{!classData ? (
-						<Typography variant="body2">
+						<Typography variant="body2" sx={{ color: 'text.secondary' }}>
 							Choose a class first — skill points and class skills are based on it.
 						</Typography>
 					) : (
 						<>
-							<Typography
-								variant="body2"
-								sx={{ marginBottom: 2, color: remaining < 0 ? 'error.main' : 'text.primary' }}
+							<Box
+								sx={{
+									display: 'inline-block', marginBottom: 2.5, padding: '6px 14px',
+									backgroundColor: 'action.hover', borderRadius: 5,
+								}}
 							>
-								Skill points remaining: {remaining} / {totalBudget}
-								{' '}({classData.skillRanksPerLevel} + {intMod} Int mod, min 1/level, × level {level})
+								<Typography
+									variant="body2"
+									sx={{ color: remaining < 0 ? 'error.main' : 'text.primary', fontWeight: 600 }}
+								>
+									{remaining} / {totalBudget} points remaining
+								</Typography>
+							</Box>
+							<Typography variant="caption" sx={{ display: 'block', color: 'text.secondary', marginBottom: 2 }}>
+								{classData.skillRanksPerLevel} + {intMod} Int mod, minimum 1/level, × level {level}
 							</Typography>
 
-							<TableContainer sx={{ maxHeight: 600 }}>
+							{/* Desktop / tablet: full table */}
+							<TableContainer
+								sx={{
+									display: { xs: 'none', sm: 'block' },
+									maxHeight: 600, border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: 2,
+								}}
+							>
 								<Table size="small" stickyHeader>
 									<TableHead>
 										<TableRow>
@@ -152,10 +169,82 @@ export default function Skills() {
 									</TableBody>
 								</Table>
 							</TableContainer>
+
+							{/* Mobile: stacked cards, one per skill */}
+							<Box
+								sx={{
+									display: { xs: 'block', sm: 'none' },
+									border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: 2,
+									paddingX: 2,
+								}}
+							>
+								{rows.map((row) => {
+									const spentWithoutRow = totalSpent - row.ranks;
+									const maxRanks = level;
+									return (
+										<Box
+											key={row.key}
+											sx={{
+												paddingY: 1.5,
+												borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+												'&:last-of-type': { borderBottom: 'none' },
+											}}
+										>
+											<Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1 }}>
+												<Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, minWidth: 0 }}>
+													{row.isClassSkill && <CheckIcon fontSize="small" color="primary" />}
+													<Typography sx={{ fontWeight: 600 }} noWrap>{row.name}</Typography>
+												</Box>
+												<Typography variant="h6" sx={{ fontWeight: 700 }}>
+													{row.total >= 0 ? `+${row.total}` : row.total}
+												</Typography>
+											</Box>
+
+											{row.specialization && (
+												<TextField
+													variant="standard"
+													placeholder="specify"
+													value={row.entry.specialization}
+													onChange={handleSpecializationChange(row.key)}
+													sx={{ marginTop: 0.5, maxWidth: 200 }}
+												/>
+											)}
+
+											<Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap', marginTop: 1 }}>
+												<Typography variant="caption" sx={{ color: 'text.secondary' }}>
+													{abilityLabels[row.ability]} {row.abilityMod >= 0 ? `+${row.abilityMod}` : row.abilityMod}
+												</Typography>
+												<FormControl size="small" sx={{ minWidth: 68 }}>
+													<Select value={row.ranks} onChange={handleRankChange(row.key)}>
+														{Array.from({ length: maxRanks + 1 }, (_, v) => v).map((v) => {
+															const affordable = v === row.ranks || spentWithoutRow + v <= totalBudget;
+															return (
+																<MenuItem key={v} value={v} disabled={!affordable}>
+																	{v} rank{v === 1 ? '' : 's'}
+																</MenuItem>
+															);
+														})}
+													</Select>
+												</FormControl>
+												{row.classBonus > 0 && (
+													<Typography variant="caption" sx={{ color: 'primary.main' }}>
+														class +{row.classBonus}
+													</Typography>
+												)}
+												{row.racialSkillBonus && (
+													<Typography variant="caption" sx={{ color: 'text.secondary' }}>
+														race +{row.racialSkillBonus.bonus}{row.racialSkillBonus.condition ? '*' : ''}
+													</Typography>
+												)}
+											</Box>
+										</Box>
+									);
+								})}
+							</Box>
 						</>
 					)}
 				</CardContent>
 			</Card>
-		</div>
+		</>
 	);
 }

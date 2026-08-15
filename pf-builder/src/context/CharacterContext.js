@@ -1,6 +1,12 @@
 import * as React from 'react';
+import skillsList from '../data/skills';
 
 const CharacterContext = React.createContext(null);
+
+const initialSkills = skillsList.reduce((acc, skill) => {
+	acc[skill.key] = { ranks: '', specialization: '' };
+	return acc;
+}, {});
 
 const initialCharacter = {
 	info: {
@@ -8,11 +14,12 @@ const initialCharacter = {
 		gender: '', age: '', height: '', weight: '', hair: '', eyes: '',
 	},
 	classInfo: { className: '', level: '' },
-	race: { name: '' },
+	race: { name: '', abilityChoice: '' },
 	abilities: {
 		str: '', dex: '', con: '', int: '', wis: '', cha: '',
 		generationMethod: '', rolls: [], pointBuyCampaign: '',
 	},
+	skills: initialSkills,
 };
 
 export function CharacterProvider({ children }) {
@@ -27,6 +34,7 @@ export function CharacterProvider({ children }) {
 		updateClass: updateSection('classInfo'),
 		updateRace: updateSection('race'),
 		updateAbilities: updateSection('abilities'),
+		updateSkills: updateSection('skills'),
 	};
 
 	return (

@@ -10,6 +10,8 @@ import {
 	rollSixAbilityScores,
 	getAvailableOptions,
 } from '../../utils/abilityScore';
+import races from '../../data/races';
+import { getRacialModifiers } from '../../utils/raceModifiers';
 
 const abilityFields = [
 	{ key: 'str', label: 'Strength' },
@@ -20,12 +22,17 @@ const abilityFields = [
 	{ key: 'cha', label: 'Charisma' },
 ];
 
-function AbilityRow({ label, score, control, extra }) {
+function AbilityRow({ label, baseScore, racialMod, control, extra }) {
+	const total = baseScore === '' ? '' : Number(baseScore) + racialMod;
 	return (
 		<Box sx={{ display: 'flex', alignItems: 'center', gap: 2, marginTop: 1 }}>
 			<Typography sx={{ width: 140 }}>{label}</Typography>
 			{control}
-			<Typography sx={{ width: 40 }} variant="body2">{formatModifier(score)}</Typography>
+			<Typography sx={{ width: 60 }} variant="body2" color="text.secondary">
+				{racialMod !== 0 ? `${racialMod >= 0 ? '+' : ''}${racialMod} race` : ''}
+			</Typography>
+			<Typography sx={{ width: 30 }} variant="body2">{total}</Typography>
+			<Typography sx={{ width: 40 }} variant="body2">{formatModifier(total)}</Typography>
 			{extra}
 		</Box>
 	);
@@ -38,6 +45,7 @@ export default function Abilities() {
 		str: abilities.str, dex: abilities.dex, con: abilities.con,
 		int: abilities.int, wis: abilities.wis, cha: abilities.cha,
 	};
+	const racialMods = getRacialModifiers(races[character.race.name], character.race.abilityChoice);
 
 	const handleMethodChange = (event) => {
 		updateAbilities({
@@ -76,7 +84,8 @@ export default function Abilities() {
 				<AbilityRow
 					key={key}
 					label={label}
-					score={abilities[key]}
+					baseScore={abilities[key]}
+					racialMod={racialMods[key]}
 					control={
 						<FormControl sx={{ minWidth: 100 }} size="small">
 							<Select value={abilities[key]} displayEmpty onChange={handleAssignChange(key)}>
@@ -169,7 +178,8 @@ export default function Abilities() {
 										<AbilityRow
 											key={key}
 											label={label}
-											score={abilities[key]}
+											baseScore={abilities[key]}
+											racialMod={racialMods[key]}
 											extra={
 												<Typography sx={{ width: 70 }} variant="caption" color="text.secondary">
 													{currentCost >= 0 ? '+' : ''}{currentCost} pts

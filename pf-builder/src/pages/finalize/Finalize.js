@@ -2,8 +2,11 @@ import { useEffect, useState } from "react";
 import { PDFDocument } from "pdf-lib";
 import characterSheet from './Pathfinder_en.pdf'
 import { useCharacter } from '../../context/CharacterContext';
-import { raceInfo } from '../race/Race';
-import { formatModifier } from '../../utils/abilityScore';
+import raceInfo from '../../data/races';
+import { formatModifier, getModifier } from '../../utils/abilityScore';
+import { getRacialModifiers } from '../../utils/raceModifiers';
+import classesData from '../../data/classes';
+import skillsList from '../../data/skills';
 
 const alignmentAbbreviations = {
 	'Lawful Good': 'LG', 'Neutral Good': 'NG', 'Chaotic Good': 'CG',
@@ -123,13 +126,23 @@ const PdfEditor = () => {
 
 		// #region Ability Scores
 
+		const racialAbilityMods = getRacialModifiers(raceInfo[character.race.name], character.race.abilityChoice);
+		const adjustedAbilities = {
+			str: character.abilities.str === '' ? '' : Number(character.abilities.str) + racialAbilityMods.str,
+			dex: character.abilities.dex === '' ? '' : Number(character.abilities.dex) + racialAbilityMods.dex,
+			con: character.abilities.con === '' ? '' : Number(character.abilities.con) + racialAbilityMods.con,
+			int: character.abilities.int === '' ? '' : Number(character.abilities.int) + racialAbilityMods.int,
+			wis: character.abilities.wis === '' ? '' : Number(character.abilities.wis) + racialAbilityMods.wis,
+			cha: character.abilities.cha === '' ? '' : Number(character.abilities.cha) + racialAbilityMods.cha,
+		};
+
 		// STR
-		firstPage.drawText(String(character.abilities.str || ""), {
+		firstPage.drawText(String(adjustedAbilities.str ?? ""), {
 			x: 73,
 			y: 651,
 			size: 12
 		});
-		firstPage.drawText(formatModifier(character.abilities.str), {
+		firstPage.drawText(formatModifier(adjustedAbilities.str), {
 			x: 100,
 			y: 651,
 			size: 12
@@ -147,12 +160,12 @@ const PdfEditor = () => {
 		});
 
 		// DEX
-		firstPage.drawText(String(character.abilities.dex || ""), {
+		firstPage.drawText(String(adjustedAbilities.dex ?? ""), {
 			x: 73,
 			y: 633,
 			size: 12
 		});
-		firstPage.drawText(formatModifier(character.abilities.dex), {
+		firstPage.drawText(formatModifier(adjustedAbilities.dex), {
 			x: 100,
 			y: 633,
 			size: 12
@@ -169,12 +182,12 @@ const PdfEditor = () => {
 		});
 
 		// CON
-		firstPage.drawText(String(character.abilities.con || ""), {
+		firstPage.drawText(String(adjustedAbilities.con ?? ""), {
 			x: 73,
 			y: 617,
 			size: 12
 		});
-		firstPage.drawText(formatModifier(character.abilities.con), {
+		firstPage.drawText(formatModifier(adjustedAbilities.con), {
 			x: 100,
 			y: 617,
 			size: 12
@@ -191,12 +204,12 @@ const PdfEditor = () => {
 		});
 
 		// INT
-		firstPage.drawText(String(character.abilities.int || ""), {
+		firstPage.drawText(String(adjustedAbilities.int ?? ""), {
 			x: 73,
 			y: 600,
 			size: 12
 		});
-		firstPage.drawText(formatModifier(character.abilities.int), {
+		firstPage.drawText(formatModifier(adjustedAbilities.int), {
 			x: 100,
 			y: 600,
 			size: 12
@@ -213,12 +226,12 @@ const PdfEditor = () => {
 		});
 
 		// WIS
-		firstPage.drawText(String(character.abilities.wis || ""), {
+		firstPage.drawText(String(adjustedAbilities.wis ?? ""), {
 			x: 73,
 			y: 581,
 			size: 12
 		});
-		firstPage.drawText(formatModifier(character.abilities.wis), {
+		firstPage.drawText(formatModifier(adjustedAbilities.wis), {
 			x: 100,
 			y: 581,
 			size: 12
@@ -235,12 +248,12 @@ const PdfEditor = () => {
 		});
 
 		// CHA
-		firstPage.drawText(String(character.abilities.cha || ""), {
+		firstPage.drawText(String(adjustedAbilities.cha ?? ""), {
 			x: 73,
 			y: 565,
 			size: 12
 		});
-		firstPage.drawText(formatModifier(character.abilities.cha), {
+		firstPage.drawText(formatModifier(adjustedAbilities.cha), {
 			x: 100,
 			y: 565,
 			size: 12
@@ -702,1058 +715,1074 @@ const PdfEditor = () => {
 
 		// #region Skills
 
+		// #region Skill Row Computation
+		const selectedClassData = classesData[character.classInfo.className];
+		const classSkillNames = selectedClassData ? selectedClassData.classSkills : [];
+		const skillRows = skillsList.map((skillDef) => {
+			const entry = character.skills[skillDef.key] || { ranks: 0 };
+			const ranks = Number(entry.ranks) || 0;
+			const abilityMod = getModifier(adjustedAbilities[skillDef.ability]);
+			const isClassSkill = classSkillNames.includes(skillDef.name);
+			const classBonus = isClassSkill && ranks > 0 ? 3 : 0;
+			return { ranks, abilityMod, isClassSkill, total: ranks + abilityMod + classBonus };
+		});
+		// #endregion Skill Row Computation
+
+
+
 		// Acrobatics
-		firstPage.drawText("X", {
+		firstPage.drawText(skillRows[0].isClassSkill ? "X" : "", {
 			x: 319,
 			y: 577,
 			size: 6
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[0].total), {
 			x: 443,
 			y: 579,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[0].ranks), {
 			x: 490,
 			y: 579,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[0].abilityMod), {
 			x: 522,
 			y: 579,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText("", {
 			x: 552,
 			y: 579,
 			size: 10
 		});
 
 		// Appraise
-		firstPage.drawText("X", {
+		firstPage.drawText(skillRows[1].isClassSkill ? "X" : "", {
 			x: 319,
 			y: 566,
 			size: 6
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[1].total), {
 			x: 443,
 			y: 568,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[1].ranks), {
 			x: 490,
 			y: 568,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[1].abilityMod), {
 			x: 522,
 			y: 568,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText("", {
 			x: 552,
 			y: 568,
 			size: 10
 		});
 
 		// Bluff
-		firstPage.drawText("X", {
+		firstPage.drawText(skillRows[2].isClassSkill ? "X" : "", {
 			x: 319,
 			y: 554,
 			size: 6
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[2].total), {
 			x: 443,
 			y: 556,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[2].ranks), {
 			x: 490,
 			y: 556,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[2].abilityMod), {
 			x: 522,
 			y: 556,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText("", {
 			x: 552,
 			y: 556,
 			size: 10
 		});
 
 		// Climb
-		firstPage.drawText("X", {
+		firstPage.drawText(skillRows[3].isClassSkill ? "X" : "", {
 			x: 319,
 			y: 543,
 			size: 6
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[3].total), {
 			x: 443,
 			y: 545,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[3].ranks), {
 			x: 490,
 			y: 545,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[3].abilityMod), {
 			x: 522,
 			y: 545,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText("", {
 			x: 552,
 			y: 545,
 			size: 10
 		});
 
 		// Craft 1
-		firstPage.drawText("X", {
+		firstPage.drawText(skillRows[4].isClassSkill ? "X" : "", {
 			x: 319,
 			y: 532,
 			size: 6
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[4].total), {
 			x: 443,
 			y: 534,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[4].ranks), {
 			x: 490,
 			y: 534,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[4].abilityMod), {
 			x: 522,
 			y: 534,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText("", {
 			x: 552,
 			y: 534,
 			size: 10
 		});
 
 		// Craft 2
-		firstPage.drawText("X", {
+		firstPage.drawText(skillRows[5].isClassSkill ? "X" : "", {
 			x: 319,
 			y: 521,
 			size: 6
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[5].total), {
 			x: 443,
 			y: 523,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[5].ranks), {
 			x: 490,
 			y: 523,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[5].abilityMod), {
 			x: 522,
 			y: 523,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText("", {
 			x: 552,
 			y: 523,
 			size: 10
 		});
 
 		// Craft 3
-		firstPage.drawText("X", {
+		firstPage.drawText(skillRows[6].isClassSkill ? "X" : "", {
 			x: 319,
 			y: 509,
 			size: 6
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[6].total), {
 			x: 443,
 			y: 511,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[6].ranks), {
 			x: 490,
 			y: 511,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[6].abilityMod), {
 			x: 522,
 			y: 511,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText("", {
 			x: 552,
 			y: 511,
 			size: 10
 		});
 
 		// Diplomacy
-		firstPage.drawText("X", {
+		firstPage.drawText(skillRows[7].isClassSkill ? "X" : "", {
 			x: 319,
 			y: 498,
 			size: 6
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[7].total), {
 			x: 443,
 			y: 500,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[7].ranks), {
 			x: 490,
 			y: 500,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[7].abilityMod), {
 			x: 522,
 			y: 500,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText("", {
 			x: 552,
 			y: 500,
 			size: 10
 		});
 
 		// Disable Device
-		firstPage.drawText("X", {
+		firstPage.drawText(skillRows[8].isClassSkill ? "X" : "", {
 			x: 319,
 			y: 486,
 			size: 6
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[8].total), {
 			x: 443,
 			y: 488,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[8].ranks), {
 			x: 490,
 			y: 488,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[8].abilityMod), {
 			x: 522,
 			y: 488,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText("", {
 			x: 552,
 			y: 488,
 			size: 10
 		});
 
 		// Disguise
-		firstPage.drawText("X", {
+		firstPage.drawText(skillRows[9].isClassSkill ? "X" : "", {
 			x: 319,
 			y: 475,
 			size: 6
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[9].total), {
 			x: 443,
 			y: 477,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[9].ranks), {
 			x: 490,
 			y: 477,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[9].abilityMod), {
 			x: 522,
 			y: 477,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText("", {
 			x: 552,
 			y: 477,
 			size: 10
 		});
 
 		// Escape Artist
-		firstPage.drawText("X", {
+		firstPage.drawText(skillRows[10].isClassSkill ? "X" : "", {
 			x: 319,
 			y: 464,
 			size: 6
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[10].total), {
 			x: 443,
 			y: 466,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[10].ranks), {
 			x: 490,
 			y: 466,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[10].abilityMod), {
 			x: 522,
 			y: 466,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText("", {
 			x: 552,
 			y: 466,
 			size: 10
 		});
 
 		// Fly
-		firstPage.drawText("X", {
+		firstPage.drawText(skillRows[11].isClassSkill ? "X" : "", {
 			x: 319,
 			y: 453,
 			size: 6
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[11].total), {
 			x: 443,
 			y: 455,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[11].ranks), {
 			x: 490,
 			y: 455,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[11].abilityMod), {
 			x: 522,
 			y: 455,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText("", {
 			x: 552,
 			y: 455,
 			size: 10
 		});
 
 		// Handle Animal
-		firstPage.drawText("X", {
+		firstPage.drawText(skillRows[12].isClassSkill ? "X" : "", {
 			x: 319,
 			y: 442,
 			size: 6
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[12].total), {
 			x: 443,
 			y: 443,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[12].ranks), {
 			x: 490,
 			y: 443,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[12].abilityMod), {
 			x: 522,
 			y: 443,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText("", {
 			x: 552,
 			y: 443,
 			size: 10
 		});
 
 		// Heal
-		firstPage.drawText("X", {
+		firstPage.drawText(skillRows[13].isClassSkill ? "X" : "", {
 			x: 319,
 			y: 430,
 			size: 6
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[13].total), {
 			x: 443,
 			y: 431,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[13].ranks), {
 			x: 490,
 			y: 431,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[13].abilityMod), {
 			x: 522,
 			y: 431,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText("", {
 			x: 552,
 			y: 431,
 			size: 10
 		});
 
 		// Intimidate
-		firstPage.drawText("X", {
+		firstPage.drawText(skillRows[14].isClassSkill ? "X" : "", {
 			x: 319,
 			y: 419,
 			size: 6
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[14].total), {
 			x: 443,
 			y: 420,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[14].ranks), {
 			x: 490,
 			y: 420,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[14].abilityMod), {
 			x: 522,
 			y: 420,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText("", {
 			x: 552,
 			y: 420,
 			size: 10
 		});
 
 		// Knowledge Arcana
-		firstPage.drawText("X", {
+		firstPage.drawText(skillRows[15].isClassSkill ? "X" : "", {
 			x: 319,
 			y: 408,
 			size: 6
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[15].total), {
 			x: 443,
 			y: 409,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[15].ranks), {
 			x: 490,
 			y: 409,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[15].abilityMod), {
 			x: 522,
 			y: 409,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText("", {
 			x: 552,
 			y: 409,
 			size: 10
 		});
 
 		// Knowledge Dungeoneering
-		firstPage.drawText("X", {
+		firstPage.drawText(skillRows[16].isClassSkill ? "X" : "", {
 			x: 319,
 			y: 397,
 			size: 6
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[16].total), {
 			x: 443,
 			y: 397,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[16].ranks), {
 			x: 490,
 			y: 397,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[16].abilityMod), {
 			x: 522,
 			y: 397,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText("", {
 			x: 552,
 			y: 397,
 			size: 10
 		});
 
 		// Knowledge Engineering
-		firstPage.drawText("X", {
+		firstPage.drawText(skillRows[17].isClassSkill ? "X" : "", {
 			x: 319,
 			y: 386,
 			size: 6
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[17].total), {
 			x: 443,
 			y: 386,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[17].ranks), {
 			x: 490,
 			y: 386,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[17].abilityMod), {
 			x: 522,
 			y: 386,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText("", {
 			x: 552,
 			y: 386,
 			size: 10
 		});
 
 		// Knowledge Geography
-		firstPage.drawText("X", {
+		firstPage.drawText(skillRows[18].isClassSkill ? "X" : "", {
 			x: 319,
 			y: 374,
 			size: 6
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[18].total), {
 			x: 443,
 			y: 374,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[18].ranks), {
 			x: 490,
 			y: 374,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[18].abilityMod), {
 			x: 522,
 			y: 374,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText("", {
 			x: 552,
 			y: 374,
 			size: 10
 		});
 
 		// Knowledge History
-		firstPage.drawText("X", {
+		firstPage.drawText(skillRows[19].isClassSkill ? "X" : "", {
 			x: 319,
 			y: 362,
 			size: 6
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[19].total), {
 			x: 443,
 			y: 362,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[19].ranks), {
 			x: 490,
 			y: 362,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[19].abilityMod), {
 			x: 522,
 			y: 362,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText("", {
 			x: 552,
 			y: 362,
 			size: 10
 		});
 
 		// Knowledge Local
-		firstPage.drawText("X", {
+		firstPage.drawText(skillRows[20].isClassSkill ? "X" : "", {
 			x: 319,
 			y: 351,
 			size: 6
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[20].total), {
 			x: 443,
 			y: 351,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[20].ranks), {
 			x: 490,
 			y: 351,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[20].abilityMod), {
 			x: 522,
 			y: 351,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText("", {
 			x: 552,
 			y: 351,
 			size: 10
 		});
 
 		// Knowledge Nature
-		firstPage.drawText("X", {
+		firstPage.drawText(skillRows[21].isClassSkill ? "X" : "", {
 			x: 319,
 			y: 340,
 			size: 6
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[21].total), {
 			x: 443,
 			y: 340,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[21].ranks), {
 			x: 490,
 			y: 340,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[21].abilityMod), {
 			x: 522,
 			y: 340,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText("", {
 			x: 552,
 			y: 340,
 			size: 10
 		});
 
 		// Knowledge Nobility
-		firstPage.drawText("X", {
+		firstPage.drawText(skillRows[22].isClassSkill ? "X" : "", {
 			x: 319,
 			y: 329,
 			size: 6
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[22].total), {
 			x: 443,
 			y: 329,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[22].ranks), {
 			x: 490,
 			y: 329,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[22].abilityMod), {
 			x: 522,
 			y: 329,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText("", {
 			x: 552,
 			y: 329,
 			size: 10
 		});
 
 		// Knowledge Planes
-		firstPage.drawText("X", {
+		firstPage.drawText(skillRows[23].isClassSkill ? "X" : "", {
 			x: 319,
 			y: 317,
 			size: 6
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[23].total), {
 			x: 443,
 			y: 317,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[23].ranks), {
 			x: 490,
 			y: 317,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[23].abilityMod), {
 			x: 522,
 			y: 317,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText("", {
 			x: 552,
 			y: 317,
 			size: 10
 		});
 
 		// Knowledge Religion
-		firstPage.drawText("X", {
+		firstPage.drawText(skillRows[24].isClassSkill ? "X" : "", {
 			x: 319,
 			y: 306,
 			size: 6
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[24].total), {
 			x: 443,
 			y: 306,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[24].ranks), {
 			x: 490,
 			y: 306,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[24].abilityMod), {
 			x: 522,
 			y: 306,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText("", {
 			x: 552,
 			y: 306,
 			size: 10
 		});
 
 		// Linguistics
-		firstPage.drawText("X", {
+		firstPage.drawText(skillRows[25].isClassSkill ? "X" : "", {
 			x: 319,
 			y: 294,
 			size: 6
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[25].total), {
 			x: 443,
 			y: 294,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[25].ranks), {
 			x: 490,
 			y: 294,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[25].abilityMod), {
 			x: 522,
 			y: 294,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText("", {
 			x: 552,
 			y: 294,
 			size: 10
 		});
 
 		// Perception
-		firstPage.drawText("X", {
+		firstPage.drawText(skillRows[26].isClassSkill ? "X" : "", {
 			x: 319,
 			y: 283,
 			size: 6
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[26].total), {
 			x: 443,
 			y: 283,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[26].ranks), {
 			x: 490,
 			y: 283,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[26].abilityMod), {
 			x: 522,
 			y: 283,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText("", {
 			x: 552,
 			y: 283,
 			size: 10
 		});
 
 		// Perform 1
-		firstPage.drawText("X", {
+		firstPage.drawText(skillRows[27].isClassSkill ? "X" : "", {
 			x: 319,
 			y: 272,
 			size: 6
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[27].total), {
 			x: 443,
 			y: 272,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[27].ranks), {
 			x: 490,
 			y: 272,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[27].abilityMod), {
 			x: 522,
 			y: 272,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText("", {
 			x: 552,
 			y: 272,
 			size: 10
 		});
 
 		// Perform 2
-		firstPage.drawText("X", {
+		firstPage.drawText(skillRows[28].isClassSkill ? "X" : "", {
 			x: 319,
 			y: 260,
 			size: 6
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[28].total), {
 			x: 443,
 			y: 260,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[28].ranks), {
 			x: 490,
 			y: 260,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[28].abilityMod), {
 			x: 522,
 			y: 260,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText("", {
 			x: 552,
 			y: 260,
 			size: 10
 		});
 
 		// Profession 1
-		firstPage.drawText("X", {
+		firstPage.drawText(skillRows[29].isClassSkill ? "X" : "", {
 			x: 319,
 			y: 249,
 			size: 6
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[29].total), {
 			x: 443,
 			y: 249,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[29].ranks), {
 			x: 490,
 			y: 249,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[29].abilityMod), {
 			x: 522,
 			y: 249,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText("", {
 			x: 552,
 			y: 249,
 			size: 10
 		});
 
 		// Profession 2
-		firstPage.drawText("X", {
+		firstPage.drawText(skillRows[30].isClassSkill ? "X" : "", {
 			x: 319,
 			y: 238,
 			size: 6
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[30].total), {
 			x: 443,
 			y: 238,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[30].ranks), {
 			x: 490,
 			y: 238,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[30].abilityMod), {
 			x: 522,
 			y: 238,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText("", {
 			x: 552,
 			y: 238,
 			size: 10
 		});
 
 		// Ride
-		firstPage.drawText("X", {
+		firstPage.drawText(skillRows[31].isClassSkill ? "X" : "", {
 			x: 319,
 			y: 226,
 			size: 6
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[31].total), {
 			x: 443,
 			y: 226,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[31].ranks), {
 			x: 490,
 			y: 226,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[31].abilityMod), {
 			x: 522,
 			y: 226,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText("", {
 			x: 552,
 			y: 226,
 			size: 10
 		});
 
 		// Sense Motive
-		firstPage.drawText("X", {
+		firstPage.drawText(skillRows[32].isClassSkill ? "X" : "", {
 			x: 319,
 			y: 215,
 			size: 6
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[32].total), {
 			x: 443,
 			y: 215,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[32].ranks), {
 			x: 490,
 			y: 215,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[32].abilityMod), {
 			x: 522,
 			y: 215,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText("", {
 			x: 552,
 			y: 215,
 			size: 10
 		});
 
 		// Sleight of Hand
-		firstPage.drawText("X", {
+		firstPage.drawText(skillRows[33].isClassSkill ? "X" : "", {
 			x: 319,
 			y: 204,
 			size: 6
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[33].total), {
 			x: 443,
 			y: 204,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[33].ranks), {
 			x: 490,
 			y: 204,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[33].abilityMod), {
 			x: 522,
 			y: 204,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText("", {
 			x: 552,
 			y: 204,
 			size: 10
 		});
 
 		// Spellcraft
-		firstPage.drawText("X", {
+		firstPage.drawText(skillRows[34].isClassSkill ? "X" : "", {
 			x: 319,
 			y: 192,
 			size: 6
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[34].total), {
 			x: 443,
 			y: 192,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[34].ranks), {
 			x: 490,
 			y: 192,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[34].abilityMod), {
 			x: 522,
 			y: 192,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText("", {
 			x: 552,
 			y: 192,
 			size: 10
 		});
 
 		// Stealth 
-		firstPage.drawText("X", {
+		firstPage.drawText(skillRows[35].isClassSkill ? "X" : "", {
 			x: 319,
 			y: 180,
 			size: 6
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[35].total), {
 			x: 443,
 			y: 180,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[35].ranks), {
 			x: 490,
 			y: 180,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[35].abilityMod), {
 			x: 522,
 			y: 180,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText("", {
 			x: 552,
 			y: 180,
 			size: 10
 		});
 
 		// Survival 
-		firstPage.drawText("X", {
+		firstPage.drawText(skillRows[36].isClassSkill ? "X" : "", {
 			x: 319,
 			y: 169,
 			size: 6
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[36].total), {
 			x: 443,
 			y: 169,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[36].ranks), {
 			x: 490,
 			y: 169,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[36].abilityMod), {
 			x: 522,
 			y: 169,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText("", {
 			x: 552,
 			y: 169,
 			size: 10
 		});
 
 		// Swim 
-		firstPage.drawText("X", {
+		firstPage.drawText(skillRows[37].isClassSkill ? "X" : "", {
 			x: 319,
 			y: 158,
 			size: 6
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[37].total), {
 			x: 443,
 			y: 157,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[37].ranks), {
 			x: 490,
 			y: 157,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[37].abilityMod), {
 			x: 522,
 			y: 157,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText("", {
 			x: 552,
 			y: 157,
 			size: 10
 		});
 
 		// Use Magic Device 
-		firstPage.drawText("X", {
+		firstPage.drawText(skillRows[38].isClassSkill ? "X" : "", {
 			x: 319,
 			y: 147,
 			size: 6
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[38].total), {
 			x: 443,
 			y: 146,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[38].ranks), {
 			x: 490,
 			y: 146,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText(String(skillRows[38].abilityMod), {
 			x: 522,
 			y: 146,
 			size: 10
 		});
-		firstPage.drawText("0", {
+		firstPage.drawText("", {
 			x: 552,
 			y: 146,
 			size: 10
 		});
+
 
 		// #endregion Skills
 

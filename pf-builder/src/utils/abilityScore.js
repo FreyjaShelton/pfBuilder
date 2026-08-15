@@ -12,9 +12,14 @@ export const CAMPAIGN_POINT_BUDGETS = {
 	'Epic Fantasy': 25,
 };
 
+export function getModifier(score) {
+	if (score === '' || score === null || score === undefined || isNaN(score)) return 0;
+	return Math.floor((Number(score) - 10) / 2);
+}
+
 export function formatModifier(score) {
 	if (score === '' || score === null || score === undefined || isNaN(score)) return '';
-	const mod = Math.floor((Number(score) - 10) / 2);
+	const mod = getModifier(score);
 	return mod >= 0 ? `+${mod}` : `${mod}`;
 }
 

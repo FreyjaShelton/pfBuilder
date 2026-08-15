@@ -1,0 +1,35 @@
+const druid = {
+	name: 'Druid',
+	role: 'The druid is a versatile hybrid who blends divine spellcasting, battlefield control, and shapeshifting into a single flexible package. In wild shape she can fight toe-to-toe as a melee combatant, while her spells and animal companion let her support, control, or blast from range. Outside of combat she excels at wilderness survival, tracking, and communing with the natural world.',
+	alignment: 'Any Neutral',
+	hitDie: 'd8',
+	startingWealth: '2d6 × 10 gp (average 70 gp)',
+	bab: '3/4',
+	saves: { fort: 'Good', ref: 'Poor', will: 'Good' },
+	classSkills: ['Climb', 'Craft', 'Fly', 'Handle Animal', 'Heal', 'Knowledge (Geography)', 'Knowledge (Nature)', 'Perception', 'Profession', 'Ride', 'Spellcraft', 'Survival', 'Swim'],
+	skillRanksPerLevel: 4,
+	keyAbility: 'Wisdom',
+	description: 'Druids are the sworn protectors and champions of the natural world, drawing their magic from the primal power of nature itself rather than from gods or arcane study. They forge deep bonds with the wild, gaining the ability to take the shape of beasts, command elemental forces, and call upon nature\'s fury. Druids typically live apart from civilization, venturing out only to defend natural places from destruction or to right great wrongs against the balance.',
+	spellcasting: {
+		type: 'Divine',
+		keyAbility: 'Wisdom',
+		style: 'Prepared',
+		description: 'Druids prepare divine spells each day after a period of meditation upon nature, drawing from the druid spell list, and may spontaneously convert prepared spells into summon nature\'s ally spells of the same or lower level.',
+	},
+	features: [
+		{ level: 1, name: 'Nature Bond', description: 'Forms a bond with nature by choosing an animal companion or a cleric domain, gaining a loyal ally or thematic divine abilities and bonus spells.' },
+		{ level: 1, name: 'Nature Sense', description: 'Gains a +2 bonus on Knowledge (nature) and Survival checks.' },
+		{ level: 1, name: 'Wild Empathy', description: 'Can improve the attitude of wild or domesticated animals, functioning like a Diplomacy check using druid level plus Charisma modifier.' },
+		{ level: 1, name: 'Orisons', description: 'Can prepare a number of 0-level druid spells (orisons) each day that can be cast repeatedly without being expended.' },
+		{ level: 2, name: 'Woodland Stride', description: 'Moves through natural undergrowth at normal speed without taking damage or being impeded by non-magical hazards.' },
+		{ level: 3, name: 'Trackless Step', description: 'Leaves no trail in natural surroundings and cannot be tracked unless she chooses to leave one.' },
+		{ level: 4, name: 'Resist Nature\'s Lure', description: 'Gains a +4 bonus on saving throws against the spell-like and supernatural abilities of fey and against spells or effects used by plants.' },
+		{ level: 4, name: 'Wild Shape', description: 'Can transform into a small or medium animal a limited number of times per day; gains access to more forms (elementals, plants, larger and smaller creatures) and more daily uses as she advances in level, eventually usable at will at 20th level.' },
+		{ level: 9, name: 'Venom Immunity', description: 'Becomes immune to all poisons.' },
+		{ level: 13, name: 'A Thousand Faces', description: 'Can change her appearance at will, as though using alter self, while remaining in her normal form.' },
+		{ level: 15, name: 'Timeless Body', description: 'No longer takes ability score penalties from aging and cannot be magically aged, though she still eventually dies of old age.' },
+		{ level: 20, name: 'Wild Shape (At Will)', description: 'Gains the ability to use wild shape at will instead of a limited number of times per day.' },
+	],
+};
+
+export default druid;

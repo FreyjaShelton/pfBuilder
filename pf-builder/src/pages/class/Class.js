@@ -6,6 +6,7 @@ import {
 import CardSelector from '../../components/CardSelector';
 import { useCharacter } from '../../context/CharacterContext';
 import classes from '../../data/classes';
+import PageHeader from '../../components/PageHeader';
 
 function StatItem({ label, value }) {
 	return (
@@ -13,7 +14,7 @@ function StatItem({ label, value }) {
 			<Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
 				{label}
 			</Typography>
-			<Typography variant="body2">{value}</Typography>
+			<Typography variant="body2" sx={{ fontWeight: 600 }}>{value}</Typography>
 		</Box>
 	);
 }
@@ -32,14 +33,14 @@ export default function Class() {
 	};
 
 	return (
-		<div>
-			<Box sx={{ marginTop: 2, marginLeft: 2, marginRight: 2 }}>
-				<Typography variant="body2">
-					Choose a class
-				</Typography>
-			</Box>
+		<>
+			<PageHeader
+				eyebrow="Step 2 of 7"
+				title="Choose Your Class"
+				subtitle="Your class shapes combat style, skills, and how you grow from level 1 to 20."
+			/>
 			<CardSelector
-				title={"Class"}
+				title="Class"
 				value={selectedClass}
 				onChange={handleClassChange}
 			>
@@ -51,7 +52,13 @@ export default function Class() {
 
 				{data && (
 					<span>
-						<Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3, marginTop: 1 }}>
+						<Box
+							sx={{
+								display: 'flex', flexWrap: 'wrap', gap: 3,
+								marginTop: 1, padding: 2,
+								backgroundColor: 'action.hover', borderRadius: 2,
+							}}
+						>
 							<StatItem label="Hit Die" value={data.hitDie} />
 							<StatItem label="BAB" value={data.bab} />
 							<StatItem label="Fort / Ref / Will" value={`${data.saves.fort} / ${data.saves.ref} / ${data.saves.will}`} />
@@ -61,11 +68,19 @@ export default function Class() {
 							<StatItem label="Starting Wealth" value={data.startingWealth} />
 						</Box>
 
-						<Typography variant="body2" sx={{ marginTop: 2 }}>{data.role}</Typography>
-						<Typography variant="body2" sx={{ marginTop: 1 }}>{data.description}</Typography>
+						<TextField
+							label="Level"
+							type="number"
+							value={character.classInfo.level}
+							onChange={handleLevelChange}
+							sx={{ marginTop: 2, maxWidth: 160 }}
+						/>
 
-						<Typography variant="subtitle2" sx={{ marginTop: 2 }}>Class Skills</Typography>
-						<Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, marginTop: 0.5 }}>
+						<Typography variant="body2" sx={{ marginTop: 3 }}>{data.role}</Typography>
+						<Typography variant="body2" sx={{ marginTop: 1.5 }}>{data.description}</Typography>
+
+						<Typography variant="subtitle2" sx={{ marginTop: 3 }}>Class Skills</Typography>
+						<Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, marginTop: 1 }}>
 							{data.classSkills.map((skill) => (
 								<Chip key={skill} label={skill} size="small" />
 							))}
@@ -73,16 +88,16 @@ export default function Class() {
 
 						{data.spellcasting && (
 							<>
-								<Typography variant="subtitle2" sx={{ marginTop: 2 }}>Spellcasting</Typography>
-								<Typography variant="body2">
+								<Typography variant="subtitle2" sx={{ marginTop: 3 }}>Spellcasting</Typography>
+								<Typography variant="body2" sx={{ marginTop: 1 }}>
 									{data.spellcasting.type} ({data.spellcasting.style}) — key ability: {data.spellcasting.keyAbility}
 								</Typography>
 								<Typography variant="body2" sx={{ marginTop: 0.5 }}>{data.spellcasting.description}</Typography>
 							</>
 						)}
 
-						<Typography variant="subtitle2" sx={{ marginTop: 2 }}>Class Features</Typography>
-						<TableContainer sx={{ maxHeight: 320, marginTop: 1 }}>
+						<Typography variant="subtitle2" sx={{ marginTop: 3 }}>Class Features</Typography>
+						<TableContainer sx={{ maxHeight: 320, marginTop: 1, border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: 2 }}>
 							<Table size="small" stickyHeader>
 								<TableHead>
 									<TableRow>
@@ -105,15 +120,6 @@ export default function Class() {
 					</span>
 				)}
 			</CardSelector>
-			<Box sx={{ marginTop: 2, marginLeft: 2, marginRight: 2, maxWidth: 200 }}>
-				<TextField
-					label="Level"
-					type="number"
-					fullWidth
-					value={character.classInfo.level}
-					onChange={handleLevelChange}
-				/>
-			</Box>
-		</div>
+		</>
 	);
 }

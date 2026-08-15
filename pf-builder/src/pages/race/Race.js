@@ -7,6 +7,7 @@ import CardSelector from '../../components/CardSelector';
 import { useCharacter } from '../../context/CharacterContext';
 import races from '../../data/races';
 import { formatAbilityMods } from '../../utils/raceModifiers';
+import PageHeader from '../../components/PageHeader';
 
 const abilityFields = [
 	{ key: 'str', label: 'Strength' },
@@ -23,7 +24,7 @@ function StatItem({ label, value }) {
 			<Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
 				{label}
 			</Typography>
-			<Typography variant="body2">{value}</Typography>
+			<Typography variant="body2" sx={{ fontWeight: 600 }}>{value}</Typography>
 		</Box>
 	);
 }
@@ -42,14 +43,14 @@ export default function Race() {
 	};
 
 	return (
-		<div>
-			<Box sx={{ marginTop: 2, marginLeft: 2, marginRight: 2 }}>
-				<Typography variant="body2">
-					Choose a race
-				</Typography>
-			</Box>
+		<>
+			<PageHeader
+				eyebrow="Step 3 of 7"
+				title="Choose Your Race"
+				subtitle="Race sets your ability modifiers, size, speed, and a handful of racial traits."
+			/>
 			<CardSelector
-				title={"Race"}
+				title="Race"
 				value={selectedRace}
 				onChange={handleRaceChange}
 			>
@@ -61,7 +62,13 @@ export default function Race() {
 
 				{data && (
 					<span>
-						<Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3, marginTop: 1 }}>
+						<Box
+							sx={{
+								display: 'flex', flexWrap: 'wrap', gap: 3,
+								marginTop: 1, padding: 2,
+								backgroundColor: 'action.hover', borderRadius: 2,
+							}}
+						>
 							<StatItem label="Size" value={data.size} />
 							<StatItem label="Speed" value={data.speed} />
 							<StatItem label="Ability Mods" value={formatAbilityMods(data)} />
@@ -83,18 +90,18 @@ export default function Race() {
 							</FormControl>
 						)}
 
-						<Typography variant="body2" sx={{ marginTop: 2 }}>{data.description}</Typography>
+						<Typography variant="body2" sx={{ marginTop: 3 }}>{data.description}</Typography>
 
-						<Typography variant="subtitle2" sx={{ marginTop: 2 }}>Languages</Typography>
-						<Typography variant="body2">
+						<Typography variant="subtitle2" sx={{ marginTop: 3 }}>Languages</Typography>
+						<Typography variant="body2" sx={{ marginTop: 1 }}>
 							Automatic: {data.languages.automatic.join(', ')}
 						</Typography>
 						<Typography variant="body2">
 							Bonus: {data.languages.bonus.join(', ')}
 						</Typography>
 
-						<Typography variant="subtitle2" sx={{ marginTop: 2 }}>Racial Traits</Typography>
-						<TableContainer sx={{ maxHeight: 320, marginTop: 1 }}>
+						<Typography variant="subtitle2" sx={{ marginTop: 3 }}>Racial Traits</Typography>
+						<TableContainer sx={{ maxHeight: 320, marginTop: 1, border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: 2 }}>
 							<Table size="small" stickyHeader>
 								<TableHead>
 									<TableRow>
@@ -115,6 +122,6 @@ export default function Race() {
 					</span>
 				)}
 			</CardSelector>
-		</div>
+		</>
 	);
 }

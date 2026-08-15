@@ -13,6 +13,8 @@ import Abilities from './pages/abilities/Abilities';
 import Equipment from './pages/equipment/Equipment';
 import Finalize from './pages/finalize/Finalize';
 import { CharacterProvider } from './context/CharacterContext';
+import { ThemeProvider, CssBaseline } from '@mui/material';
+import theme from './theme';
 import {
 	createHashRouter,
 	RouterProvider,
@@ -65,10 +67,13 @@ const router = createHashRouter([
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
 	<React.StrictMode>
-		<CharacterProvider>
-			<RouterProvider router={router} />
-			<Footer />
-		</CharacterProvider>
+		<ThemeProvider theme={theme}>
+			<CssBaseline />
+			<CharacterProvider>
+				<RouterProvider router={router} />
+				<Footer />
+			</CharacterProvider>
+		</ThemeProvider>
 	</React.StrictMode>
 );
 

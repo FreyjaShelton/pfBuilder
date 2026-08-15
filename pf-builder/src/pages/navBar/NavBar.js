@@ -54,7 +54,7 @@ export default function NavBar() {
 						<Typography
 							variant="h6"
 							component="a"
-							href="/"
+							href="/#/home"
 							sx={{ color: 'text.primary', textDecoration: 'none', fontWeight: 700, flexGrow: 1 }}
 						>
 							Pathbuilder 1E

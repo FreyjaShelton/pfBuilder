@@ -6,9 +6,12 @@ import { useCharacter } from '../../context/CharacterContext';
 import raceInfo from '../../data/races';
 import { formatModifier, getModifier } from '../../utils/abilityScore';
 import { getRacialModifiers } from '../../utils/raceModifiers';
+import { getBaseAttackBonus, getSaveBonuses, formatSigned } from '../../utils/classProgression';
+import { getCMB, getCMD, getCombatManeuverSizeModifier } from '../../utils/combatStats';
 import classesData from '../../data/classes';
 import skillsList from '../../data/skills';
 import PageHeader from '../../components/PageHeader';
+import { getStepEyebrow } from '../../data/wizardSteps';
 
 const alignmentAbbreviations = {
 	'Lawful Good': 'LG', 'Neutral Good': 'NG', 'Chaotic Good': 'CG',
@@ -318,13 +321,31 @@ const PdfEditor = () => {
 			size: 12
 		});
 
+		// #region Step 9: Saving Throws, Initiative, Attack Values (BAB/CMB/CMD)
+		const combatClassData = classesData[character.classInfo.className];
+		const combatLevel = Number(character.classInfo.level) || 1;
+		const combatSize = raceInfo[character.race.name]?.size || 'Medium';
+		const combatBab = combatClassData ? getBaseAttackBonus(combatClassData.bab, combatLevel) : 0;
+		const strMod = getModifier(adjustedAbilities.str);
+		const dexMod = getModifier(adjustedAbilities.dex);
+		const conMod = getModifier(adjustedAbilities.con);
+		const wisMod = getModifier(adjustedAbilities.wis);
+		const saveBonuses = combatClassData ? getSaveBonuses(combatClassData.saves, combatLevel) : { fort: 0, ref: 0, will: 0 };
+		const fortTotal = saveBonuses.fort + conMod;
+		const refTotal = saveBonuses.ref + dexMod;
+		const willTotal = saveBonuses.will + wisMod;
+		const cmb = getCMB(combatBab, strMod, combatSize);
+		const cmd = getCMD(combatBab, strMod, dexMod, combatSize);
+		const cmbSizeMod = getCombatManeuverSizeModifier(combatSize);
+		// #endregion Step 9: Saving Throws, Initiative, Attack Values (BAB/CMB/CMD)
+
 		// Initiative
-		firstPage.drawText("Init", {
+		firstPage.drawText(formatSigned(dexMod), {
 			x: 241,
 			y: 565,
 			size: 12
 		});
-		firstPage.drawText("Dex", {
+		firstPage.drawText(formatSigned(dexMod), {
 			x: 265,
 			y: 565,
 			size: 12
@@ -387,138 +408,138 @@ const PdfEditor = () => {
 		});
 
 		// Fortitude saving throw
-		firstPage.drawText("Fort", {
+		firstPage.drawText(formatSigned(fortTotal), {
 			x: 109,
 			y: 476,
 			size: 12
 		});
-		firstPage.drawText("BS", {
+		firstPage.drawText(formatSigned(saveBonuses.fort), {
 			x: 135,
 			y: 476,
 			size: 12
 		});
-		firstPage.drawText("Con", {
+		firstPage.drawText(formatSigned(conMod), {
 			x: 162,
 			y: 476,
 			size: 12
 		});
-		firstPage.drawText("Mag", {
+		firstPage.drawText("", {
 			x: 190,
 			y: 476,
 			size: 12
 		});
-		firstPage.drawText("Mis", {
+		firstPage.drawText("", {
 			x: 217,
 			y: 476,
 			size: 12
 		});
 
 		// Reflex saving throw
-		firstPage.drawText("Ref", {
+		firstPage.drawText(formatSigned(refTotal), {
 			x: 109,
 			y: 458,
 			size: 12
 		});
-		firstPage.drawText("BS", {
+		firstPage.drawText(formatSigned(saveBonuses.ref), {
 			x: 135,
 			y: 458,
 			size: 12
 		});
-		firstPage.drawText("Dex", {
+		firstPage.drawText(formatSigned(dexMod), {
 			x: 162,
 			y: 458,
 			size: 12
 		});
-		firstPage.drawText("Mag", {
+		firstPage.drawText("", {
 			x: 190,
 			y: 458,
 			size: 12
 		});
-		firstPage.drawText("Mis", {
+		firstPage.drawText("", {
 			x: 217,
 			y: 458,
 			size: 12
 		});
 
 		// Will Saving throw
-		firstPage.drawText("Will", {
+		firstPage.drawText(formatSigned(willTotal), {
 			x: 109,
 			y: 442,
 			size: 12
 		});
-		firstPage.drawText("BS", {
+		firstPage.drawText(formatSigned(saveBonuses.will), {
 			x: 135,
 			y: 442,
 			size: 12
 		});
-		firstPage.drawText("Wis", {
+		firstPage.drawText(formatSigned(wisMod), {
 			x: 162,
 			y: 442,
 			size: 12
 		});
-		firstPage.drawText("Mag", {
+		firstPage.drawText("", {
 			x: 190,
 			y: 442,
 			size: 12
 		});
-		firstPage.drawText("Mis", {
+		firstPage.drawText("", {
 			x: 217,
 			y: 442,
 			size: 12
 		});
 
 		// Attack stuff
-		firstPage.drawText("BAB", {
+		firstPage.drawText(formatSigned(combatBab), {
 			x: 175,
 			y: 420,
 			size: 12
 		});
-		firstPage.drawText("SR", {
+		firstPage.drawText("", {
 			x: 282,
 			y: 420,
 			size: 12
 		});
-		firstPage.drawText("CMB", {
+		firstPage.drawText(formatSigned(cmb), {
 			x: 130,
 			y: 400,
 			size: 12
 		});
-		firstPage.drawText("BAB", {
+		firstPage.drawText(formatSigned(combatBab), {
 			x: 163,
 			y: 400,
 			size: 12
 		});
-		firstPage.drawText("STR", {
+		firstPage.drawText(formatSigned(strMod), {
 			x: 193,
 			y: 400,
 			size: 12
 		});
-		firstPage.drawText("Size", {
+		firstPage.drawText(formatSigned(cmbSizeMod), {
 			x: 223,
 			y: 400,
 			size: 12
 		});
-		firstPage.drawText("CMD", {
+		firstPage.drawText(formatSigned(cmd), {
 			x: 130,
 			y: 372,
 			size: 12
 		});
-		firstPage.drawText("BAB", {
+		firstPage.drawText(formatSigned(combatBab), {
 			x: 163,
 			y: 372,
 			size: 12
 		});
-		firstPage.drawText("STR", {
+		firstPage.drawText(formatSigned(strMod), {
 			x: 193,
 			y: 372,
 			size: 12
 		});
-		firstPage.drawText("Dex", {
+		firstPage.drawText(formatSigned(dexMod), {
 			x: 223,
 			y: 372,
 			size: 12
 		});
-		firstPage.drawText("Size", {
+		firstPage.drawText(formatSigned(cmbSizeMod), {
 			x: 254,
 			y: 372,
 			size: 12
@@ -2367,170 +2388,37 @@ const PdfEditor = () => {
 
 		// #region Feats
 
-		secondPage.drawText("Feat 1", {
-			x: 190,
-			y: 575,
-			size: 12
-		});
-		secondPage.drawText("Feat 2", {
-			x: 190,
-			y: 560,
-			size: 12
-		});
-		secondPage.drawText("Feat 3", {
-			x: 190,
-			y: 545,
-			size: 12
-		});
-		secondPage.drawText("Feat 4", {
-			x: 190,
-			y: 530,
-			size: 12
-		});
-		secondPage.drawText("Feat 5", {
-			x: 190,
-			y: 515,
-			size: 12
-		});
-		secondPage.drawText("Feat 6", {
-			x: 190,
-			y: 500,
-			size: 12
-		});
-		secondPage.drawText("Feat 7", {
-			x: 190,
-			y: 486,
-			size: 12
-		});
-		secondPage.drawText("Feat 8", {
-			x: 190,
-			y: 472,
-			size: 12
-		});
-		secondPage.drawText("Feat 9", {
-			x: 190,
-			y: 457,
-			size: 12
-		});
-		secondPage.drawText("Feat 10", {
-			x: 190,
-			y: 442,
-			size: 12
-		});
-		secondPage.drawText("Feat 11", {
-			x: 190,
-			y: 428,
-			size: 12
-		});
-		secondPage.drawText("Feat 12", {
-			x: 190,
-			y: 413,
-			size: 12
+		const featPositions = [575, 560, 545, 530, 515, 500, 486, 472, 457, 442, 428, 413];
+
+		featPositions.forEach((y, index) => {
+			secondPage.drawText(character.feats.selected[index] || "", {
+				x: 190,
+				y,
+				size: 12
+			});
 		});
 
 		// #endregion Feats
 
 		// #region Special Abilities
 
-		secondPage.drawText("Special Ability 1", {
-			x: 190,
-			y: 370,
-			size: 12
-		});
-		secondPage.drawText("Special Ability 2", {
-			x: 190,
-			y: 355,
-			size: 12
-		});
-		secondPage.drawText("Special Ability 3", {
-			x: 190,
-			y: 341,
-			size: 12
-		});
-		secondPage.drawText("Special Ability 4", {
-			x: 190,
-			y: 326,
-			size: 12
-		});
-		secondPage.drawText("Special Ability 5", {
-			x: 190,
-			y: 311,
-			size: 12
-		});
-		secondPage.drawText("Special Ability 6", {
-			x: 190,
-			y: 297,
-			size: 12
-		});
-		secondPage.drawText("Special Ability 7", {
-			x: 190,
-			y: 282,
-			size: 12
-		});
-		secondPage.drawText("Special Ability 8", {
-			x: 190,
-			y: 268,
-			size: 12
-		});
-		secondPage.drawText("Special Ability 9", {
-			x: 190,
-			y: 253,
-			size: 12
-		});
-		secondPage.drawText("Special Ability 10", {
-			x: 190,
-			y: 238,
-			size: 12
-		});
-		secondPage.drawText("Special Ability 11", {
-			x: 190,
-			y: 224,
-			size: 12
-		});
-		secondPage.drawText("Special Ability 12", {
-			x: 190,
-			y: 210,
-			size: 12
-		});
-		secondPage.drawText("Special Ability 13", {
-			x: 190,
-			y: 195,
-			size: 12
-		});
-		secondPage.drawText("Special Ability 14", {
-			x: 190,
-			y: 180,
-			size: 12
-		});
-		secondPage.drawText("Special Ability 15", {
-			x: 190,
-			y: 165,
-			size: 12
-		});
-		secondPage.drawText("Special Ability 16", {
-			x: 190,
-			y: 150,
-			size: 12
-		});
-		secondPage.drawText("Special Ability 17", {
-			x: 190,
-			y: 136,
-			size: 12
-		});
-		secondPage.drawText("Special Ability 18", {
-			x: 190,
-			y: 121,
-			size: 12
-		});
-		secondPage.drawText("Special Ability 19", {
-			x: 190,
-			y: 107,
-			size: 12
-		});
-		secondPage.drawText("Special Ability 20", {
-			x: 190,
-			y: 92,
-			size: 12
+		const currentClassData = classesData[character.classInfo.className];
+		const currentLevel = Number(character.classInfo.level) || 1;
+		const specialAbilityNames = currentClassData
+			? currentClassData.specialByLevel.slice(0, currentLevel)
+			: [];
+
+		const specialAbilityPositions = [
+			370, 355, 341, 326, 311, 297, 282, 268, 253, 238,
+			224, 210, 195, 180, 165, 150, 136, 121, 107, 92,
+		];
+
+		specialAbilityPositions.forEach((y, index) => {
+			secondPage.drawText(specialAbilityNames[index] || "", {
+				x: 190,
+				y,
+				size: 12
+			});
 		});
 
 		// #endregion Special Abilities
@@ -3059,7 +2947,7 @@ const PdfEditor = () => {
 	return (
 		<>
 			<PageHeader
-				eyebrow="Step 7 of 7"
+				eyebrow={getStepEyebrow('Finalize')}
 				title="Finalize"
 				subtitle="Your character sheet, filled out automatically from everything you've entered."
 			/>

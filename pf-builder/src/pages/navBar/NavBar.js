@@ -7,8 +7,7 @@ import MenuIcon from '@mui/icons-material/Menu';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-
-const pages = ["Home", "Class", "Race", "Abilities", "Skills", "Equipment", "Finalize"];
+import pages from '../../data/wizardSteps';
 
 export default function NavBar() {
 	const [anchorElNav, setAnchorElNav] = React.useState(null);

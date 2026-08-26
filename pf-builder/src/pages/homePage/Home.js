@@ -2,6 +2,7 @@ import * as React from 'react';
 import { Box, Card, CardContent, Divider, FormControl, InputLabel, MenuItem, Select, TextField, Typography } from '@mui/material';
 import { useCharacter } from '../../context/CharacterContext';
 import PageHeader from '../../components/PageHeader';
+import { getStepEyebrow } from '../../data/wizardSteps';
 
 const alignments = [
 	'Lawful Good', 'Neutral Good', 'Chaotic Good',
@@ -31,7 +32,7 @@ export default function Home() {
 	return (
 		<>
 			<PageHeader
-				eyebrow="Step 1 of 7"
+				eyebrow={getStepEyebrow('Home')}
 				title="Basic Info"
 				subtitle="Start with who your character is — these details appear on the finished sheet."
 			/>

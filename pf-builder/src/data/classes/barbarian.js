@@ -5,6 +5,28 @@ const barbarian = {
 	hitDie: 'd12',
 	startingWealth: '3d6 × 10 gp (average 105 gp)',
 	bab: 'Full',
+	specialByLevel: [
+		'Fast movement, rage', // 1
+		'Rage power, uncanny dodge', // 2
+		'Trap sense +1', // 3
+		'Rage power', // 4
+		'Improved uncanny dodge', // 5
+		'Rage power, trap sense +2', // 6
+		'Damage reduction 1/—', // 7
+		'Rage power', // 8
+		'Trap sense +3', // 9
+		'Damage reduction 2/—, rage power', // 10
+		'Greater rage', // 11
+		'Rage power, trap sense +4', // 12
+		'Damage reduction 3/—', // 13
+		'Indomitable will, rage power', // 14
+		'Trap sense +5', // 15
+		'Damage reduction 4/—, rage power', // 16
+		'Tireless rage', // 17
+		'Rage power, trap sense +6', // 18
+		'Damage reduction 5/—', // 19
+		'Mighty rage, rage power', // 20
+	],
 	saves: { fort: 'Good', ref: 'Poor', will: 'Poor' },
 	classSkills: ['Acrobatics', 'Climb', 'Craft', 'Handle Animal', 'Intimidate', 'Knowledge (Nature)', 'Perception', 'Ride', 'Survival', 'Swim'],
 	skillRanksPerLevel: 4,

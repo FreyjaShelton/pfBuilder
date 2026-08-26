@@ -5,6 +5,28 @@ const bard = {
 	hitDie: 'd8',
 	startingWealth: '3d6 × 10 gp (average 105 gp)',
 	bab: '3/4',
+	specialByLevel: [
+		'Bardic knowledge, bardic performance, cantrips, countersong, distraction, fascinate, inspire courage +1', // 1
+		'Versatile performance, well-versed', // 2
+		'Inspire competence +2', // 3
+		'', // 4
+		'Inspire courage +2, lore master 1/day', // 5
+		'Suggestion, versatile performance', // 6
+		'Inspire competence +3', // 7
+		'Dirge of doom', // 8
+		'Inspire greatness', // 9
+		'Jack-of-all-trades, versatile performance', // 10
+		'Inspire competence +4, inspire courage +3, lore master 2/day', // 11
+		'Soothing performance', // 12
+		'', // 13
+		'Frightening tune, versatile performance', // 14
+		'Inspire competence +5, inspire heroics', // 15
+		'', // 16
+		'Inspire courage +4, lore master 3/day', // 17
+		'Mass suggestion, versatile performance', // 18
+		'Inspire competence +6', // 19
+		'Deadly performance', // 20
+	],
 	saves: { fort: 'Poor', ref: 'Good', will: 'Good' },
 	classSkills: ['Acrobatics', 'Appraise', 'Bluff', 'Climb', 'Craft', 'Diplomacy', 'Disguise', 'Escape Artist', 'Intimidate', 'Knowledge (Arcana)', 'Knowledge (Dungeoneering)', 'Knowledge (Engineering)', 'Knowledge (Geography)', 'Knowledge (History)', 'Knowledge (Local)', 'Knowledge (Nature)', 'Knowledge (Nobility)', 'Knowledge (Planes)', 'Knowledge (Religion)', 'Linguistics', 'Perception', 'Perform', 'Profession', 'Sense Motive', 'Sleight of Hand', 'Spellcraft', 'Use Magic Device'],
 	skillRanksPerLevel: 6,

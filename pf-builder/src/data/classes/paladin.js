@@ -5,6 +5,28 @@ const paladin = {
 	hitDie: 'd10',
 	startingWealth: '5d6 × 10 gp (average 175 gp)',
 	bab: 'Full',
+	specialByLevel: [
+		'Aura of good, detect evil, smite evil 1/day', // 1
+		'Divine grace, lay on hands', // 2
+		'Aura of courage, divine health, mercy', // 3
+		'Channel positive energy, smite evil 2/day', // 4
+		'Divine bond', // 5
+		'Mercy', // 6
+		'Smite evil 3/day', // 7
+		'Aura of resolve', // 8
+		'Mercy', // 9
+		'Smite evil 4/day', // 10
+		'Aura of justice', // 11
+		'Mercy', // 12
+		'Smite evil 5/day', // 13
+		'Aura of faith', // 14
+		'Mercy', // 15
+		'Smite evil 6/day', // 16
+		'Aura of righteousness', // 17
+		'Mercy', // 18
+		'Smite evil 7/day', // 19
+		'Holy champion', // 20
+	],
 	saves: { fort: 'Good', ref: 'Poor', will: 'Good' },
 	classSkills: ['Craft', 'Diplomacy', 'Handle Animal', 'Heal', 'Knowledge (Nobility)', 'Knowledge (Religion)', 'Profession', 'Ride', 'Sense Motive', 'Spellcraft'],
 	skillRanksPerLevel: 2,

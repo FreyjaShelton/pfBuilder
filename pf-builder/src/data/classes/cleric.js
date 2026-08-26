@@ -5,6 +5,28 @@ const cleric = {
 	hitDie: 'd8',
 	startingWealth: '4d6 × 10 gp (average 140 gp)',
 	bab: '3/4',
+	specialByLevel: [
+		'Aura, channel energy 1d6, domains, orisons, spontaneous casting', // 1
+		'', // 2
+		'Channel energy 2d6', // 3
+		'', // 4
+		'Channel energy 3d6', // 5
+		'', // 6
+		'Channel energy 4d6', // 7
+		'', // 8
+		'Channel energy 5d6', // 9
+		'', // 10
+		'Channel energy 6d6', // 11
+		'', // 12
+		'Channel energy 7d6', // 13
+		'', // 14
+		'Channel energy 8d6', // 15
+		'', // 16
+		'Channel energy 9d6', // 17
+		'', // 18
+		'Channel energy 10d6', // 19
+		'', // 20
+	],
 	saves: { fort: 'Good', ref: 'Poor', will: 'Good' },
 	classSkills: ['Appraise', 'Craft', 'Diplomacy', 'Heal', 'Knowledge (Arcana)', 'Knowledge (History)', 'Knowledge (Nobility)', 'Knowledge (Planes)', 'Knowledge (Religion)', 'Linguistics', 'Profession', 'Sense Motive', 'Spellcraft'],
 	skillRanksPerLevel: 2,

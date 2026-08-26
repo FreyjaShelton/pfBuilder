@@ -5,6 +5,28 @@ const sorcerer = {
 	hitDie: 'd6',
 	startingWealth: '2d6 × 10 gp (average 70 gp)',
 	bab: '1/2',
+	specialByLevel: [
+		'Bloodline power, cantrips, eschew materials', // 1
+		'', // 2
+		'Bloodline power, bloodline spell', // 3
+		'', // 4
+		'Bloodline spell', // 5
+		'', // 6
+		'Bloodline feat, bloodline spell', // 7
+		'', // 8
+		'Bloodline power, bloodline spell', // 9
+		'', // 10
+		'Bloodline spell', // 11
+		'', // 12
+		'Bloodline feat, bloodline spell', // 13
+		'', // 14
+		'Bloodline power, bloodline spell', // 15
+		'', // 16
+		'Bloodline spell', // 17
+		'', // 18
+		'Bloodline feat, bloodline spell', // 19
+		'Bloodline power', // 20
+	],
 	saves: { fort: 'Poor', ref: 'Poor', will: 'Good' },
 	classSkills: ['Appraise', 'Bluff', 'Craft', 'Fly', 'Intimidate', 'Knowledge (Arcana)', 'Profession', 'Spellcraft', 'Use Magic Device'],
 	skillRanksPerLevel: 2,

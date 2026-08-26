@@ -22,3 +22,21 @@ export function getSaveBonuses(saves, level) {
 		will: getSaveBonus(saves.will, level),
 	};
 }
+
+// Formats any bonus/modifier number with an explicit sign, e.g. 3 -> "+3", -1 -> "-1".
+export function formatSigned(n) {
+	return n >= 0 ? `+${n}` : `${n}`;
+}
+
+// Formats a base attack bonus as the full iterative-attack string PF1E sheets use,
+// e.g. 16 -> "+16/+11/+6/+1" (extra attacks at -5 each once the bonus reaches +6).
+export function formatBaseAttackBonus(bab) {
+	const attacks = [];
+	let value = bab;
+	while (value >= 1) {
+		attacks.push(value);
+		value -= 5;
+	}
+	if (attacks.length === 0) attacks.push(bab);
+	return attacks.map((v) => (v >= 0 ? `+${v}` : `${v}`)).join('/');
+}

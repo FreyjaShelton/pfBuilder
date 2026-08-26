@@ -5,6 +5,28 @@ const wizard = {
 	hitDie: 'd6',
 	startingWealth: '2d6 × 10 gp (average 70 gp)',
 	bab: '1/2',
+	specialByLevel: [
+		'Arcane bond, arcane school, cantrips, Scribe Scroll', // 1
+		'', // 2
+		'', // 3
+		'', // 4
+		'Bonus feat', // 5
+		'', // 6
+		'', // 7
+		'', // 8
+		'', // 9
+		'Bonus feat', // 10
+		'', // 11
+		'', // 12
+		'', // 13
+		'', // 14
+		'Bonus feat', // 15
+		'', // 16
+		'', // 17
+		'', // 18
+		'', // 19
+		'Bonus feat', // 20
+	],
 	saves: { fort: 'Poor', ref: 'Poor', will: 'Good' },
 	classSkills: ['Appraise', 'Craft', 'Fly', 'Knowledge (Arcana)', 'Knowledge (Dungeoneering)', 'Knowledge (Engineering)', 'Knowledge (Geography)', 'Knowledge (History)', 'Knowledge (Local)', 'Knowledge (Nature)', 'Knowledge (Nobility)', 'Knowledge (Planes)', 'Knowledge (Religion)', 'Linguistics', 'Profession', 'Spellcraft'],
 	skillRanksPerLevel: 2,

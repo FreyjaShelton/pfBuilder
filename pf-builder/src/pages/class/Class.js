@@ -7,6 +7,10 @@ import CardSelector from '../../components/CardSelector';
 import { useCharacter } from '../../context/CharacterContext';
 import classes from '../../data/classes';
 import PageHeader from '../../components/PageHeader';
+import { getSaveBonuses, formatBaseAttackBonus, getBaseAttackBonus } from '../../utils/classProgression';
+import { getStepEyebrow } from '../../data/wizardSteps';
+
+const levels = Array.from({ length: 20 }, (_, i) => i + 1);
 
 function StatItem({ label, value }) {
 	return (
@@ -35,7 +39,7 @@ export default function Class() {
 	return (
 		<>
 			<PageHeader
-				eyebrow="Step 2 of 7"
+				eyebrow={getStepEyebrow('Class')}
 				title="Choose Your Class"
 				subtitle="Your class shapes combat style, skills, and how you grow from level 1 to 20."
 			/>
@@ -69,12 +73,18 @@ export default function Class() {
 						</Box>
 
 						<TextField
+							select
 							label="Level"
-							type="number"
 							value={character.classInfo.level}
 							onChange={handleLevelChange}
-							sx={{ marginTop: 2, maxWidth: 160 }}
-						/>
+							sx={{ marginTop: 2, minWidth: 80, maxWidth: 160 }}
+						>
+							{Array.from({ length: 20 }, (_, i) => i + 1).map((level) => (
+								<MenuItem key={level} value={level}>
+									{level}
+								</MenuItem>
+							))}
+						</TextField>
 
 						<Typography variant="body2" sx={{ marginTop: 3 }}>{data.role}</Typography>
 						<Typography variant="body2" sx={{ marginTop: 1.5 }}>{data.description}</Typography>
@@ -93,6 +103,42 @@ export default function Class() {
 									{data.spellcasting.type} ({data.spellcasting.style}) — key ability: {data.spellcasting.keyAbility}
 								</Typography>
 								<Typography variant="body2" sx={{ marginTop: 0.5 }}>{data.spellcasting.description}</Typography>
+							</>
+						)}
+
+						{data.specialByLevel && (
+							<>
+								<Typography variant="subtitle2" sx={{ marginTop: 3 }}>Level Progression</Typography>
+								<TableContainer sx={{ maxHeight: 400, marginTop: 1, border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: 2 }}>
+									<Table size="small" stickyHeader>
+										<TableHead>
+											<TableRow>
+												<TableCell sx={{ width: 50 }}>Lvl</TableCell>
+												<TableCell sx={{ width: 90 }}>BAB</TableCell>
+												<TableCell sx={{ width: 70 }}>Fort</TableCell>
+												<TableCell sx={{ width: 70 }}>Ref</TableCell>
+												<TableCell sx={{ width: 70 }}>Will</TableCell>
+												<TableCell>Special</TableCell>
+											</TableRow>
+										</TableHead>
+										<TableBody>
+											{levels.map((lvl) => {
+												const bab = getBaseAttackBonus(data.bab, lvl);
+												const saves = getSaveBonuses(data.saves, lvl);
+												return (
+													<TableRow key={lvl}>
+														<TableCell>{lvl}</TableCell>
+														<TableCell>{formatBaseAttackBonus(bab)}</TableCell>
+														<TableCell>+{saves.fort}</TableCell>
+														<TableCell>+{saves.ref}</TableCell>
+														<TableCell>+{saves.will}</TableCell>
+														<TableCell>{data.specialByLevel[lvl - 1]}</TableCell>
+													</TableRow>
+												);
+											})}
+										</TableBody>
+									</Table>
+								</TableContainer>
 							</>
 						)}
 

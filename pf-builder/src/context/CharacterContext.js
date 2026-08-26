@@ -20,6 +20,7 @@ const initialCharacter = {
 		generationMethod: '', rolls: [], pointBuyCampaign: '',
 	},
 	skills: initialSkills,
+	feats: { selected: [] },
 };
 
 export function CharacterProvider({ children }) {
@@ -35,6 +36,7 @@ export function CharacterProvider({ children }) {
 		updateRace: updateSection('race'),
 		updateAbilities: updateSection('abilities'),
 		updateSkills: updateSection('skills'),
+		updateFeats: updateSection('feats'),
 	};
 
 	return (

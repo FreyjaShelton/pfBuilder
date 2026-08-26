@@ -11,6 +11,7 @@ import classesData from '../../data/classes';
 import racesData from '../../data/races';
 import skillsList from '../../data/skills';
 import PageHeader from '../../components/PageHeader';
+import { getStepEyebrow } from '../../data/wizardSteps';
 
 const abilityLabels = { str: 'STR', dex: 'DEX', con: 'CON', int: 'INT', wis: 'WIS', cha: 'CHA' };
 
@@ -56,7 +57,7 @@ export default function Skills() {
 	return (
 		<>
 			<PageHeader
-				eyebrow="Step 5 of 7"
+				eyebrow={getStepEyebrow('Skills')}
 				title="Skills"
 				subtitle="Spend your skill points — class skills get a +3 bonus once you invest a rank."
 			/>

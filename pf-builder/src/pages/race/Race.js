@@ -8,6 +8,7 @@ import { useCharacter } from '../../context/CharacterContext';
 import races from '../../data/races';
 import { formatAbilityMods } from '../../utils/raceModifiers';
 import PageHeader from '../../components/PageHeader';
+import { getStepEyebrow } from '../../data/wizardSteps';
 
 const abilityFields = [
 	{ key: 'str', label: 'Strength' },
@@ -45,7 +46,7 @@ export default function Race() {
 	return (
 		<>
 			<PageHeader
-				eyebrow="Step 3 of 7"
+				eyebrow={getStepEyebrow('Race')}
 				title="Choose Your Race"
 				subtitle="Race sets your ability modifiers, size, speed, and a handful of racial traits."
 			/>

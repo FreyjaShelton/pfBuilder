@@ -10,6 +10,7 @@ import Class from './pages/class/Class';
 import Race from './pages/race/Race';
 import Skills from './pages/skills/Skills';
 import Abilities from './pages/abilities/Abilities';
+import Feats from './pages/feats/Feats';
 import Equipment from './pages/equipment/Equipment';
 import Finalize from './pages/finalize/Finalize';
 import { CharacterProvider } from './context/CharacterContext';
@@ -50,6 +51,10 @@ const router = createHashRouter([
 			{
 				path: "skills",
 				element: <Skills />
+			},
+			{
+				path: "feats",
+				element: <Feats />
 			},
 			{
 				path: "equipment",

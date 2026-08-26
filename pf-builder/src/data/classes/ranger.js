@@ -5,6 +5,28 @@ const ranger = {
 	hitDie: 'd10',
 	startingWealth: '5d6 × 10 gp (average 175 gp)',
 	bab: 'Full',
+	specialByLevel: [
+		'1st favored enemy, track, wild empathy', // 1
+		'Combat style feat', // 2
+		'Endurance, 1st favored terrain', // 3
+		"Hunter's bond", // 4
+		'2nd favored enemy', // 5
+		'Combat style feat', // 6
+		'Woodland stride', // 7
+		'Swift tracker, 2nd favored terrain', // 8
+		'Evasion', // 9
+		'3rd favored enemy, combat style feat', // 10
+		'Quarry', // 11
+		'Camouflage', // 12
+		'3rd favored terrain', // 13
+		'Combat style feat', // 14
+		'4th favored enemy', // 15
+		'Improved evasion', // 16
+		'Hide in plain sight', // 17
+		'4th favored terrain, combat style feat', // 18
+		'Improved quarry', // 19
+		'5th favored enemy, master hunter', // 20
+	],
 	saves: { fort: 'Good', ref: 'Good', will: 'Poor' },
 	classSkills: ['Climb', 'Craft', 'Handle Animal', 'Heal', 'Intimidate', 'Knowledge (Dungeoneering)', 'Knowledge (Geography)', 'Knowledge (Nature)', 'Perception', 'Profession', 'Ride', 'Spellcraft', 'Stealth', 'Survival', 'Swim'],
 	skillRanksPerLevel: 6,

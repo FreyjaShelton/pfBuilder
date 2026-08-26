@@ -13,6 +13,7 @@ import {
 import races from '../../data/races';
 import { getRacialModifiers } from '../../utils/raceModifiers';
 import PageHeader from '../../components/PageHeader';
+import { getStepEyebrow } from '../../data/wizardSteps';
 
 const abilityFields = [
 	{ key: 'str', label: 'Strength' },
@@ -140,7 +141,7 @@ export default function Abilities() {
 	return (
 		<>
 			<PageHeader
-				eyebrow="Step 4 of 7"
+				eyebrow={getStepEyebrow('Abilities')}
 				title="Ability Scores"
 				subtitle="Pick a generation method, then assign Strength through Charisma."
 			/>

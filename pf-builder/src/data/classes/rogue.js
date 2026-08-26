@@ -5,6 +5,28 @@ const rogue = {
 	hitDie: 'd8',
 	startingWealth: '4d6 × 10 gp (average 140 gp)',
 	bab: '3/4',
+	specialByLevel: [
+		'Sneak attack +1d6, trapfinding', // 1
+		'Evasion, rogue talent', // 2
+		'Sneak attack +2d6, trap sense +1', // 3
+		'Rogue talent, uncanny dodge', // 4
+		'Sneak attack +3d6', // 5
+		'Rogue talent, trap sense +2', // 6
+		'Sneak attack +4d6', // 7
+		'Improved uncanny dodge, rogue talent', // 8
+		'Sneak attack +5d6, trap sense +3', // 9
+		'Advanced talents, rogue talent', // 10
+		'Sneak attack +6d6', // 11
+		'Rogue talent, trap sense +4', // 12
+		'Sneak attack +7d6', // 13
+		'Rogue talent', // 14
+		'Sneak attack +8d6, trap sense +5', // 15
+		'Rogue talent', // 16
+		'Sneak attack +9d6', // 17
+		'Rogue talent, trap sense +6', // 18
+		'Sneak attack +10d6', // 19
+		'Master strike, rogue talent', // 20
+	],
 	saves: { fort: 'Poor', ref: 'Good', will: 'Poor' },
 	classSkills: ['Acrobatics', 'Appraise', 'Bluff', 'Climb', 'Craft', 'Diplomacy', 'Disable Device', 'Disguise', 'Escape Artist', 'Intimidate', 'Knowledge (Dungeoneering)', 'Knowledge (Local)', 'Linguistics', 'Perception', 'Perform', 'Profession', 'Sense Motive', 'Sleight of Hand', 'Stealth', 'Swim', 'Use Magic Device'],
 	skillRanksPerLevel: 8,

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Box, Card, CardContent, CircularProgress, Typography } from "@mui/material";
-import { PDFDocument } from "pdf-lib";
+import { PDFDocument, StandardFonts } from "pdf-lib";
 import characterSheet from './Pathfinder_en.pdf'
 import { useCharacter } from '../../context/CharacterContext';
 import raceInfo from '../../data/races';
@@ -10,6 +10,10 @@ import { getBaseAttackBonus, getSaveBonuses, formatSigned } from '../../utils/cl
 import { getCMB, getCMD, getCombatManeuverSizeModifier } from '../../utils/combatStats';
 import classesData from '../../data/classes';
 import skillsList from '../../data/skills';
+import equipmentData from '../../data/equipment';
+import { parseCostToGold } from '../../utils/currency';
+import { parseWeightToLbs } from '../../utils/weight';
+import { wrapEntriesToLines } from '../../utils/pdfText';
 import PageHeader from '../../components/PageHeader';
 import { getStepEyebrow } from '../../data/wizardSteps';
 
@@ -30,6 +34,7 @@ const PdfEditor = () => {
 
 		// Load PDF
 		const pdfDoc = await PDFDocument.load(existingPdfBytes);
+		const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
 
 		// Get form fields
 		const form = pdfDoc.getForm();
@@ -2037,294 +2042,35 @@ const PdfEditor = () => {
 		// #endregion AC Items
 
 		// #region Gear
-		secondPage.drawText("Item 1", {
-			x: 40,
-			y: 570,
-			size: 12
+		const gearItems = character.equipment.selected.map((item) => {
+			const equipmentItem = equipmentData.find((e) => e.name === item.name);
+			const itemWeight = parseWeightToLbs(equipmentItem?.weight) * item.quantity;
+			return {
+				name: item.quantity > 1 ? `${item.name} (x${item.quantity})` : item.name,
+				weight: itemWeight,
+			};
 		});
-		secondPage.drawText("10", {
-			x: 152,
-			y: 572,
-			size: 8
-		});
-
-		secondPage.drawText("Item 2", {
-			x: 40,
-			y: 556,
-			size: 12
-		});
-		secondPage.drawText("10", {
-			x: 152,
-			y: 558,
-			size: 8
-		});
-		
-		secondPage.drawText("Item 3", {
-			x: 40,
-			y: 542,
-			size: 12
-		});
-		secondPage.drawText("10", {
-			x: 152,
-			y: 544,
-			size: 8
-		});
-
-		secondPage.drawText("Item 4", {
-			x: 40,
-			y: 526,
-			size: 12
-		});
-		secondPage.drawText("10", {
-			x: 152,
-			y: 528,
-			size: 8
-		});
-
-		secondPage.drawText("Item 5", {
-			x: 40,
-			y: 510,
-			size: 12
-		});
-		secondPage.drawText("10", {
-			x: 152,
-			y: 512,
-			size: 8
-		});
-
-		secondPage.drawText("Item 6", {
-			x: 40,
-			y: 497,
-			size: 12
-		});
-		secondPage.drawText("10", {
-			x: 152,
-			y: 499,
-			size: 8
-		});
-
-		secondPage.drawText("Item 7", {
-			x: 40,
-			y: 482,
-			size: 12
-		});
-		secondPage.drawText("10", {
-			x: 152,
-			y: 484,
-			size: 8
-		});
-
-		secondPage.drawText("Item 8", {
-			x: 40,
-			y: 468,
-			size: 12
-		});
-		secondPage.drawText("10", {
-			x: 152,
-			y: 470,
-			size: 8
-		});
-
-		secondPage.drawText("Item 9", {
-			x: 40,
-			y: 454,
-			size: 12
-		});
-		secondPage.drawText("10", {
-			x: 152,
-			y: 456,
-			size: 8
-		});
-
-		secondPage.drawText("Item 10", {
-			x: 40,
-			y: 440,
-			size: 12
-		});
-		secondPage.drawText("10", {
-			x: 152,
-			y: 442,
-			size: 8
-		});
-
-		secondPage.drawText("Item 11", {
-			x: 40,
-			y: 426,
-			size: 12
-		});
-		secondPage.drawText("10", {
-			x: 152,
-			y: 428,
-			size: 8
-		});
-		
-		secondPage.drawText("Item 12", {
-			x: 40,
-			y: 410,
-			size: 12
-		});
-		secondPage.drawText("10", {
-			x: 152,
-			y: 412,
-			size: 8
-		});
-
-		secondPage.drawText("Item 13", {
-			x: 40,
-			y: 396,
-			size: 12
-		});
-		secondPage.drawText("10", {
-			x: 152,
-			y: 398,
-			size: 8
-		});
-
-		secondPage.drawText("Item 14", {
-			x: 40,
-			y: 380,
-			size: 12
-		});
-		secondPage.drawText("10", {
-			x: 152,
-			y: 382,
-			size: 8
-		});
-
-		secondPage.drawText("Item 15", {
-			x: 40,
-			y: 366,
-			size: 12
-		});
-		secondPage.drawText("10", {
-			x: 152,
-			y: 368,
-			size: 8
-		});
-
-		secondPage.drawText("Item 16", {
-			x: 40,
-			y: 352,
-			size: 12
-		});
-		secondPage.drawText("10", {
-			x: 152,
-			y: 354,
-			size: 8
-		});
-
-		secondPage.drawText("Item 17", {
-			x: 40,
-			y: 338,
-			size: 12
-		});
-		secondPage.drawText("10", {
-			x: 152,
-			y: 340,
-			size: 8
-		});
-
-		secondPage.drawText("Item 18", {
-			x: 40,
-			y: 324,
-			size: 12
-		});
-		secondPage.drawText("10", {
-			x: 152,
-			y: 326,
-			size: 8
-		});
-
-		secondPage.drawText("Item 19", {
-			x: 40,
-			y: 310,
-			size: 12
-		});
-		secondPage.drawText("10", {
-			x: 152,
-			y: 312,
-			size: 8
-		});
-
-		secondPage.drawText("Item 20", {
-			x: 40,
-			y: 294,
-			size: 12
-		});
-		secondPage.drawText("10", {
-			x: 152,
-			y: 296,
-			size: 8
-		});
-
-		secondPage.drawText("Item 21", {
-			x: 40,
-			y: 278,
-			size: 12
-		});
-		secondPage.drawText("10", {
-			x: 152,
-			y: 280,
-			size: 8
-		});
-
-		secondPage.drawText("Item 22", {
-			x: 40,
-			y: 264,
-			size: 12
-		});
-		secondPage.drawText("10", {
-			x: 152,
-			y: 266,
-			size: 8
-		});
-
-		secondPage.drawText("Item 23", {
-			x: 40,
-			y: 250,
-			size: 12
-		});
-		secondPage.drawText("10", {
-			x: 152,
-			y: 252,
-			size: 8
-		});
-
-		secondPage.drawText("Item 24", {
-			x: 40,
-			y: 236,
-			size: 12
-		});
-		secondPage.drawText("10", {
-			x: 152,
-			y: 238,
-			size: 8
-		});
-
-		secondPage.drawText("Item 25", {
-			x: 40,
-			y: 222,
-			size: 12
-		});
-		secondPage.drawText("10", {
-			x: 152,
-			y: 224,
-			size: 8
-		});
-
-		secondPage.drawText("Item 26", {
-			x: 40,
-			y: 208,
-			size: 12
-		});
-		secondPage.drawText("10", {
-			x: 152,
-			y: 210,
-			size: 8
+		const gearRowPositions = [
+			570, 556, 542, 526, 510, 497, 482, 468, 454, 440, 426, 410, 396, 380, 366,
+			352, 338, 324, 310, 294, 278, 264, 250, 236, 222, 208,
+		];
+		gearRowPositions.forEach((nameY, index) => {
+			const gearItem = gearItems[index];
+			secondPage.drawText(gearItem?.name || "", {
+				x: 40,
+				y: nameY,
+				size: 12
+			});
+			secondPage.drawText(gearItem ? `${Math.round(gearItem.weight * 100) / 100}` : "", {
+				x: 152,
+				y: nameY + 2,
+				size: 8
+			});
 		});
 
 		// Total Weight
-		secondPage.drawText("100", {
+		const totalGearWeight = gearItems.reduce((sum, item) => sum + item.weight, 0);
+		secondPage.drawText(`${Math.round(totalGearWeight * 100) / 100}`, {
 			x: 152,
 			y: 196,
 			size: 8
@@ -2373,7 +2119,12 @@ const PdfEditor = () => {
 			y: 87,
 			size: 8
 		});
-		secondPage.drawText("Gold", {
+		const totalSpentGold = character.equipment.selected.reduce((sum, item) => {
+			const equipmentItem = equipmentData.find((e) => e.name === item.name);
+			return sum + parseCostToGold(equipmentItem?.cost) * item.quantity;
+		}, 0);
+		const remainingGold = character.equipment.gold === '' ? '' : character.equipment.gold - totalSpentGold;
+		secondPage.drawText(remainingGold === '' ? '' : `${Math.round(remainingGold * 100) / 100}`, {
 			x: 60,
 			y: 73,
 			size: 8
@@ -2413,8 +2164,16 @@ const PdfEditor = () => {
 			224, 210, 195, 180, 165, 150, 136, 121, 107, 92,
 		];
 
+		// Long entries (e.g. a level-1 Cleric's "Aura, channel energy 1d6, domains, orisons,
+		// spontaneous casting") would otherwise run past the column and bleed into the Spells
+		// section, so wrap by real rendered width and let overflow push later rows down a line.
+		const specialAbilityMaxWidth = 220;
+		const specialAbilityLines = wrapEntriesToLines(
+			helveticaFont, specialAbilityNames, 12, specialAbilityMaxWidth
+		);
+
 		specialAbilityPositions.forEach((y, index) => {
-			secondPage.drawText(specialAbilityNames[index] || "", {
+			secondPage.drawText(specialAbilityLines[index] || "", {
 				x: 190,
 				y,
 				size: 12

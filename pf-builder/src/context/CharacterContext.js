@@ -21,6 +21,7 @@ const initialCharacter = {
 	},
 	skills: initialSkills,
 	feats: { selected: [] },
+	equipment: { selected: [], goldMethod: '', gold: '' },
 };
 
 export function CharacterProvider({ children }) {
@@ -37,6 +38,7 @@ export function CharacterProvider({ children }) {
 		updateAbilities: updateSection('abilities'),
 		updateSkills: updateSection('skills'),
 		updateFeats: updateSection('feats'),
+		updateEquipment: updateSection('equipment'),
 	};
 
 	return (

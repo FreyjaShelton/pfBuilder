@@ -6,14 +6,18 @@ import { useCharacter } from '../../context/CharacterContext';
 import raceInfo from '../../data/races';
 import { formatModifier, getModifier } from '../../utils/abilityScore';
 import { getRacialModifiers } from '../../utils/raceModifiers';
-import { getBaseAttackBonus, getSaveBonuses, formatSigned } from '../../utils/classProgression';
+import { getBaseAttackBonus, getSaveBonuses, formatSigned, formatBaseAttackBonus } from '../../utils/classProgression';
 import { getCMB, getCMD, getCombatManeuverSizeModifier } from '../../utils/combatStats';
+import { getWornArmorAndShields, getArmorClass } from '../../utils/armorClass';
+import { getWeaponStats } from '../../utils/weaponAttack';
+import { getTotalHitPoints } from '../../utils/hitPoints';
+import { getArmorAdjustedSpeed } from '../../utils/speed';
 import classesData from '../../data/classes';
 import skillsList from '../../data/skills';
 import equipmentData from '../../data/equipment';
 import { parseCostToGold } from '../../utils/currency';
 import { parseWeightToLbs } from '../../utils/weight';
-import { wrapEntriesToLines } from '../../utils/pdfText';
+import { wrapEntriesToLines, fitFontSize } from '../../utils/pdfText';
 import PageHeader from '../../components/PageHeader';
 import { getStepEyebrow } from '../../data/wizardSteps';
 
@@ -283,53 +287,11 @@ const PdfEditor = () => {
 
 		// #region Character Stats
 
-		firstPage.drawText("HP", {
-			x: 242,
-			y: 659,
-			size: 12
-		});
-		firstPage.drawText("DR", {
-			x: 288,
-			y: 659,
-			size: 12
-		});
-
-		// Move speed
-		firstPage.drawText("Speed", {
-			x: 365,
-			y: 659,
-			size: 12
-		});
-		firstPage.drawText("Armor Speed", {
-			x: 447,
-			y: 659,
-			size: 12
-		});
-		firstPage.drawText("Fly", {
-			x: 323,
-			y: 635,
-			size: 12
-		});
-		firstPage.drawText("Swim", {
-			x: 400,
-			y: 635,
-			size: 12
-		});
-		firstPage.drawText("Climb", {
-			x: 444,
-			y: 635,
-			size: 12
-		});
-		firstPage.drawText("Burrow", {
-			x: 480,
-			y: 635,
-			size: 12
-		});
-
 		// #region Step 9: Saving Throws, Initiative, Attack Values (BAB/CMB/CMD)
 		const combatClassData = classesData[character.classInfo.className];
 		const combatLevel = Number(character.classInfo.level) || 1;
-		const combatSize = raceInfo[character.race.name]?.size || 'Medium';
+		const combatRaceData = raceInfo[character.race.name];
+		const combatSize = combatRaceData?.size || 'Medium';
 		const combatBab = combatClassData ? getBaseAttackBonus(combatClassData.bab, combatLevel) : 0;
 		const strMod = getModifier(adjustedAbilities.str);
 		const dexMod = getModifier(adjustedAbilities.dex);
@@ -342,7 +304,64 @@ const PdfEditor = () => {
 		const cmb = getCMB(combatBab, strMod, combatSize);
 		const cmd = getCMD(combatBab, strMod, dexMod, combatSize);
 		const cmbSizeMod = getCombatManeuverSizeModifier(combatSize);
+		const wornArmor = getWornArmorAndShields(character.equipment.selected, equipmentData);
+		const armorClass = getArmorClass({
+			armorItems: wornArmor.armor, shieldItems: wornArmor.shields, dexMod, size: combatSize,
+		});
 		// #endregion Step 9: Saving Throws, Initiative, Attack Values (BAB/CMB/CMD)
+
+		const totalHp = combatClassData
+			? getTotalHitPoints({ hitDie: combatClassData.hitDie, level: combatLevel, conMod })
+			: 0;
+
+		firstPage.drawText(`${totalHp}`, {
+			x: 242,
+			y: 659,
+			size: 12
+		});
+		firstPage.drawText("DR", {
+			x: 288,
+			y: 659,
+			size: 12
+		});
+
+		// Move speed
+		const baseSpeed = combatRaceData?.speed || '30 ft.';
+		const ignoresArmorSpeedPenalty = combatRaceData?.traits?.some((t) => t.name === 'Slow and Steady') || false;
+		const armorSpeed = getArmorAdjustedSpeed({
+			baseSpeed, armorItems: wornArmor.armor, ignoresArmorSpeedPenalty,
+		});
+
+		firstPage.drawText(baseSpeed, {
+			x: 365,
+			y: 659,
+			size: 12
+		});
+		firstPage.drawText(armorSpeed, {
+			x: 447,
+			y: 659,
+			size: 12
+		});
+		firstPage.drawText("", {
+			x: 323,
+			y: 635,
+			size: 12
+		});
+		firstPage.drawText("", {
+			x: 400,
+			y: 635,
+			size: 12
+		});
+		firstPage.drawText("", {
+			x: 444,
+			y: 635,
+			size: 12
+		});
+		firstPage.drawText("", {
+			x: 480,
+			y: 635,
+			size: 12
+		});
 
 		// Initiative
 		firstPage.drawText(formatSigned(dexMod), {
@@ -356,57 +375,49 @@ const PdfEditor = () => {
 			size: 12
 		});
 
-		firstPage.drawText("AC", {
+		// AC = 10 + Armor + Shield + Dex + Size + Natural Armor + Deflection (the "10 +" and
+		// "+"s between each blank are pre-printed on the template).
+		firstPage.drawText(`${armorClass.total}`, {
 			x: 73,
 			y: 537,
 			size: 12
 		});
-
-		// KNOWN BUG (pre-existing, out of scope for this phase): this draw duplicates the one
-		// immediately above at the same x/y — likely meant to be a different field. Investigate
-		// when the Character Stats region gets wired to real data.
-		// AC
-		firstPage.drawText("AC", {
-			x: 73,
-			y: 537,
-			size: 12
-		});
-		firstPage.drawText("AB", {
+		firstPage.drawText(formatSigned(armorClass.armorBonus), {
 			x: 120,
 			y: 537,
 			size: 12
 		});
-		firstPage.drawText("SB", {
+		firstPage.drawText(formatSigned(armorClass.shieldBonus), {
 			x: 147,
 			y: 537,
 			size: 12
 		});
-		firstPage.drawText("Dex", {
+		firstPage.drawText(formatSigned(armorClass.dexForAC), {
 			x: 176,
 			y: 537,
 			size: 12
 		});
-		firstPage.drawText("Size", {
+		firstPage.drawText(formatSigned(armorClass.sizeMod), {
 			x: 205,
 			y: 537,
 			size: 12
 		});
-		firstPage.drawText("NA", {
+		firstPage.drawText(formatSigned(armorClass.naturalArmor), {
 			x: 235,
 			y: 537,
 			size: 12
 		});
-		firstPage.drawText("DM", {
+		firstPage.drawText(formatSigned(armorClass.deflection), {
 			x: 263,
 			y: 537,
 			size: 12
 		});
-		firstPage.drawText("Touch", {
+		firstPage.drawText(`${armorClass.touch}`, {
 			x: 72,
 			y: 509,
 			size: 12
 		});
-		firstPage.drawText("FF", {
+		firstPage.drawText(`${armorClass.flatFooted}`, {
 			x: 156,
 			y: 509,
 			size: 12
@@ -554,189 +565,40 @@ const PdfEditor = () => {
 
 		// #region Weapons
 
-		// Weapon 1
-		firstPage.drawText("Weapon 1", {
-			x: 31,
-			y: 331,
-			size: 12
-		});
-		firstPage.drawText("Atk Bonus", {
-			x: 215,
-			y: 331,
-			size: 12
-		});
-		firstPage.drawText("Crit", {
-			x: 278,
-			y: 331,
-			size: 12
-		});
-		firstPage.drawText("Type", {
-			x: 31,
-			y: 305,
-			size: 12
-		});
-		firstPage.drawText("Range", {
-			x: 62,
-			y: 305,
-			size: 12
-		});
-		firstPage.drawText("Ammo", {
-			x: 113,
-			y: 305,
-			size: 12
-		});
-		firstPage.drawText("Damage", {
-			x: 215,
-			y: 305,
-			size: 12
-		});
+		const selectedWeapons = character.equipment.selected
+			.filter((s) => s.category === 'Weapons')
+			.map((s) => equipmentData.find((e) => e.name === s.name))
+			.filter(Boolean);
 
-		// Weapon 2
-		firstPage.drawText("Weapon 2", {
-			x: 31,
-			y: 268,
-			size: 12
-		});
-		firstPage.drawText("Atk Bonus", {
-			x: 215,
-			y: 268,
-			size: 12
-		});
-		firstPage.drawText("Crit", {
-			x: 278,
-			y: 268,
-			size: 12
-		});
-		firstPage.drawText("Type", {
-			x: 31,
-			y: 242,
-			size: 12
-		});
-		firstPage.drawText("Range", {
-			x: 62,
-			y: 242,
-			size: 12
-		});
-		firstPage.drawText("Ammo", {
-			x: 113,
-			y: 242,
-			size: 12
-		});
-		firstPage.drawText("Damage", {
-			x: 215,
-			y: 242,
-			size: 12
-		});
+		const weaponSlots = [
+			{ nameY: 331, detailY: 305 },
+			{ nameY: 268, detailY: 242 },
+			{ nameY: 204, detailY: 180 },
+			{ nameY: 142, detailY: 116 },
+			{ nameY: 80, detailY: 54 },
+		];
 
-		// Weapon 3
-		firstPage.drawText("Weapon 3", {
-			x: 31,
-			y: 204,
-			size: 12
-		});
-		firstPage.drawText("Atk Bonus", {
-			x: 215,
-			y: 204,
-			size: 12
-		});
-		firstPage.drawText("Crit", {
-			x: 278,
-			y: 204,
-			size: 12
-		});
-		firstPage.drawText("Type", {
-			x: 31,
-			y: 180,
-			size: 12
-		});
-		firstPage.drawText("Range", {
-			x: 62,
-			y: 180,
-			size: 12
-		});
-		firstPage.drawText("Ammo", {
-			x: 113,
-			y: 180,
-			size: 12
-		});
-		firstPage.drawText("Damage", {
-			x: 215,
-			y: 180,
-			size: 12
-		});
+		// Each weapon-table cell is narrow and can't wrap onto a second line without breaking
+		// the row layout, so long values (e.g. "19-20/x2", "P or S") shrink to fit their column
+		// instead of bleeding into the next one.
+		const drawFittedText = (page, text, x, y, maxWidth, maxSize = 12) => {
+			const size = fitFontSize(helveticaFont, text, maxWidth, maxSize);
+			page.drawText(text || "", { x, y, size });
+		};
 
-		// Weapon 4
-		firstPage.drawText("Weapon 4", {
-			x: 31,
-			y: 142,
-			size: 12
-		});
-		firstPage.drawText("Atk Bonus", {
-			x: 215,
-			y: 142,
-			size: 12
-		});
-		firstPage.drawText("Crit", {
-			x: 278,
-			y: 142,
-			size: 12
-		});
-		firstPage.drawText("Type", {
-			x: 31,
-			y: 116,
-			size: 12
-		});
-		firstPage.drawText("Range", {
-			x: 62,
-			y: 116,
-			size: 12
-		});
-		firstPage.drawText("Ammo", {
-			x: 113,
-			y: 116,
-			size: 12
-		});
-		firstPage.drawText("Damage", {
-			x: 215,
-			y: 116,
-			size: 12
-		});
+		weaponSlots.forEach(({ nameY, detailY }, index) => {
+			const weapon = selectedWeapons[index];
+			const stats = weapon
+				? getWeaponStats(weapon, { bab: combatBab, strMod, dexMod, size: combatSize })
+				: null;
 
-		// Weapon 5
-		firstPage.drawText("Weapon 5", {
-			x: 31,
-			y: 80,
-			size: 12
-		});
-		firstPage.drawText("Atk Bonus", {
-			x: 215,
-			y: 80,
-			size: 12
-		});
-		firstPage.drawText("Crit", {
-			x: 278,
-			y: 80,
-			size: 12
-		});
-		firstPage.drawText("Type", {
-			x: 31,
-			y: 54,
-			size: 12
-		});
-		firstPage.drawText("Range", {
-			x: 62,
-			y: 54,
-			size: 12
-		});
-		firstPage.drawText("Ammo", {
-			x: 113,
-			y: 54,
-			size: 12
-		});
-		firstPage.drawText("Damage", {
-			x: 215,
-			y: 54,
-			size: 12
+			drawFittedText(firstPage, weapon?.name || "", 31, nameY, 176);
+			drawFittedText(firstPage, stats ? formatBaseAttackBonus(stats.attackBonus) : "", 215, nameY, 55);
+			drawFittedText(firstPage, stats?.critical || "", 278, nameY, 30);
+			drawFittedText(firstPage, stats?.damageType || "", 31, detailY, 25);
+			drawFittedText(firstPage, stats?.range || "", 62, detailY, 43);
+			drawFittedText(firstPage, "", 113, detailY, 94);
+			drawFittedText(firstPage, stats?.damage || "", 215, detailY, 60);
 		});
 
 		// #endregion Weapons
@@ -1826,217 +1688,53 @@ const PdfEditor = () => {
 		// #region Page 2
 
 		// #region AC Items
-		secondPage.drawText("Item 1", {
-			x: 40,
-			y: 710,
-			size: 14
-		});
-		secondPage.drawText("0", {
-			x: 160,
-			y: 710,
-			size: 14
-		});
-		secondPage.drawText("Type", {
-			x: 190,
-			y: 710,
-			size: 14
-		});
-		secondPage.drawText("0", {
-			x: 250,
-			y: 710,
-			size: 14
-		});
-		secondPage.drawText("0%", {
-			x: 290,
-			y: 710,
-			size: 14
-		});
-		secondPage.drawText("0", {
-			x: 337,
-			y: 710,
-			size: 14
-		});
-		secondPage.drawText("0", {
-			x: 370,
-			y: 710,
-			size: 14
-		});
+		const acItemsSelected = character.equipment.selected
+			.filter((s) => s.category === 'Armor & Shields')
+			.map((s) => {
+				const item = equipmentData.find((e) => e.name === s.name);
+				const displayName = s.quantity > 1 ? `${s.name} (x${s.quantity})` : s.name;
+				return { ...item, displayName };
+			});
 
-		secondPage.drawText("Item 2", {
-			x: 40,
-			y: 690,
-			size: 14
-		});
-		secondPage.drawText("0", {
-			x: 160,
-			y: 690,
-			size: 14
-		});
-		secondPage.drawText("Type", {
-			x: 190,
-			y: 690,
-			size: 14
-		});
-		secondPage.drawText("0", {
-			x: 250,
-			y: 690,
-			size: 14
-		});
-		secondPage.drawText("0%", {
-			x: 290,
-			y: 690,
-			size: 14
-		});
-		secondPage.drawText("0", {
-			x: 337,
-			y: 690,
-			size: 14
-		});
-		secondPage.drawText("0", {
-			x: 370,
-			y: 690,
-			size: 14
-		});
+		const acItemRowPositions = [710, 690, 672, 654, 636, 618];
 
-		secondPage.drawText("Item 3", {
-			x: 40,
-			y: 672,
-			size: 14
-		});
-		secondPage.drawText("0", {
-			x: 160,
-			y: 672,
-			size: 14
-		});
-		secondPage.drawText("Type", {
-			x: 190,
-			y: 672,
-			size: 14
-		});
-		secondPage.drawText("0", {
-			x: 250,
-			y: 672,
-			size: 14
-		});
-		secondPage.drawText("0%", {
-			x: 290,
-			y: 672,
-			size: 14
-		});
-		secondPage.drawText("0", {
-			x: 337,
-			y: 672,
-			size: 14
-		});
-		secondPage.drawText("0", {
-			x: 370,
-			y: 672,
-			size: 14
-		});
-
-		secondPage.drawText("Item 4", {
-			x: 40,
-			y: 654,
-			size: 14
-		});
-		secondPage.drawText("0", {
-			x: 160,
-			y: 654,
-			size: 14
-		});
-		secondPage.drawText("Type", {
-			x: 190,
-			y: 654,
-			size: 14
-		});
-		secondPage.drawText("0", {
-			x: 250,
-			y: 654,
-			size: 14
-		});
-		secondPage.drawText("0%", {
-			x: 290,
-			y: 654,
-			size: 14
-		});
-		secondPage.drawText("0", {
-			x: 337,
-			y: 654,
-			size: 14
-		});
-		secondPage.drawText("0", {
-			x: 370,
-			y: 654,
-			size: 14
-		});
-
-		secondPage.drawText("Item 5", {
-			x: 40,
-			y: 636,
-			size: 14
-		});
-		secondPage.drawText("0", {
-			x: 160,
-			y: 636,
-			size: 14
-		});
-		secondPage.drawText("Type", {
-			x: 190,
-			y: 636,
-			size: 14
-		});
-		secondPage.drawText("0", {
-			x: 250,
-			y: 636,
-			size: 14
-		});
-		secondPage.drawText("0%", {
-			x: 290,
-			y: 636,
-			size: 14
-		});
-		secondPage.drawText("0", {
-			x: 337,
-			y: 636,
-			size: 14
-		});
-		secondPage.drawText("0", {
-			x: 370,
-			y: 636,
-			size: 14
-		});
-
-		// KNOWN BUG (pre-existing, out of scope for this phase): this 6th row is missing its
-		// "Item N" name draw (present on all 5 rows above) — fix when this region gets real data.
-		secondPage.drawText("0", {
-			x: 160,
-			y: 618,
-			size: 14
-		});
-		secondPage.drawText("Type", {
-			x: 190,
-			y: 618,
-			size: 14
-		});
-		secondPage.drawText("0", {
-			x: 250,
-			y: 618,
-			size: 14
-		});
-		secondPage.drawText("0%", {
-			x: 290,
-			y: 618,
-			size: 14
-		});
-		secondPage.drawText("0", {
-			x: 337,
-			y: 618,
-			size: 14
-		});
-		secondPage.drawText("0", {
-			x: 370,
-			y: 618,
-			size: 14
+		acItemRowPositions.forEach((y, index) => {
+			const acItem = acItemsSelected[index];
+			secondPage.drawText(acItem?.displayName || "", {
+				x: 40,
+				y,
+				size: 14
+			});
+			secondPage.drawText(acItem?.armorBonus || "", {
+				x: 160,
+				y,
+				size: 14
+			});
+			secondPage.drawText(acItem?.armorType || "", {
+				x: 190,
+				y,
+				size: 14
+			});
+			secondPage.drawText(acItem?.checkPenalty || "", {
+				x: 250,
+				y,
+				size: 14
+			});
+			secondPage.drawText(acItem?.spellFailure || "", {
+				x: 290,
+				y,
+				size: 14
+			});
+			secondPage.drawText(acItem?.weight || "", {
+				x: 337,
+				y,
+				size: 14
+			});
+			secondPage.drawText("", {
+				x: 370,
+				y,
+				size: 14
+			});
 		});
 
 		// #endregion AC Items

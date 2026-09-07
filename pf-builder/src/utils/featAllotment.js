@@ -13,11 +13,3 @@ export function getBonusFeatCount(classData, level) {
 		.slice(0, level)
 		.filter((entry) => /bonus feat/i.test(entry)).length;
 }
-
-// Total number of feats a character may select, given their class, level, and race.
-export function getTotalFeatAllotment({ classData, level, raceName }) {
-	const base = getBaseFeatCount(level);
-	const bonus = getBonusFeatCount(classData, level);
-	const humanBonus = raceName === 'Human' ? 1 : 0;
-	return base + bonus + humanBonus;
-}

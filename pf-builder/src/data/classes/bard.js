@@ -33,6 +33,50 @@ const bard = {
 	keyAbility: 'Charisma',
 	description: 'Untold wonders and secrets exist for those skillful enough to discover them, and no one is more adept at drawing out this hidden knowledge than the bard. Equal parts scholar, wit, and performer, bards use music, poetry, and magic to unravel the wiles of the world, weaving spells with words and melody to inspire allies and confound foes.',
 	spellcasting: { type: 'Arcane', keyAbility: 'Charisma', style: 'Spontaneous', description: 'A bard casts a limited number of arcane spells known from the bard spell list without preparation, similar to a sorcerer, and can cast any spell she knows on the fly. All bard spells have a verbal component and are cast through performance.' },
+	spellsPerDay: [
+		[0, 1, 0, 0, 0, 0, 0], // 1
+		[0, 2, 0, 0, 0, 0, 0], // 2
+		[0, 3, 0, 0, 0, 0, 0], // 3
+		[0, 3, 1, 0, 0, 0, 0], // 4
+		[0, 4, 2, 0, 0, 0, 0], // 5
+		[0, 4, 3, 0, 0, 0, 0], // 6
+		[0, 4, 3, 1, 0, 0, 0], // 7
+		[0, 4, 4, 2, 0, 0, 0], // 8
+		[0, 5, 4, 3, 0, 0, 0], // 9
+		[0, 5, 4, 3, 1, 0, 0], // 10
+		[0, 5, 4, 4, 2, 0, 0], // 11
+		[0, 5, 5, 4, 3, 0, 0], // 12
+		[0, 5, 5, 4, 3, 1, 0], // 13
+		[0, 5, 5, 4, 4, 2, 0], // 14
+		[0, 5, 5, 5, 4, 3, 0], // 15
+		[0, 5, 5, 5, 4, 3, 1], // 16
+		[0, 5, 5, 5, 4, 4, 2], // 17
+		[0, 5, 5, 5, 5, 4, 3], // 18
+		[0, 5, 5, 5, 5, 5, 4], // 19
+		[0, 5, 5, 5, 5, 5, 5], // 20
+	],
+	spellsKnown: [
+		[4, 2, 0, 0, 0, 0, 0], // 1
+		[5, 3, 0, 0, 0, 0, 0], // 2
+		[6, 4, 0, 0, 0, 0, 0], // 3
+		[6, 4, 2, 0, 0, 0, 0], // 4
+		[6, 4, 3, 0, 0, 0, 0], // 5
+		[6, 4, 4, 0, 0, 0, 0], // 6
+		[6, 5, 4, 2, 0, 0, 0], // 7
+		[6, 5, 4, 3, 0, 0, 0], // 8
+		[6, 5, 4, 4, 0, 0, 0], // 9
+		[6, 5, 5, 4, 2, 0, 0], // 10
+		[6, 6, 5, 4, 3, 0, 0], // 11
+		[6, 6, 5, 4, 4, 0, 0], // 12
+		[6, 6, 5, 5, 4, 2, 0], // 13
+		[6, 6, 6, 5, 4, 3, 0], // 14
+		[6, 6, 6, 5, 4, 4, 0], // 15
+		[6, 6, 6, 5, 5, 4, 2], // 16
+		[6, 6, 6, 6, 5, 4, 3], // 17
+		[6, 6, 6, 6, 5, 4, 4], // 18
+		[6, 6, 6, 6, 5, 5, 4], // 19
+		[6, 6, 6, 6, 6, 5, 5], // 20
+	],
 	features: [
 		{ level: 1, name: 'Bardic Knowledge', description: 'A bard adds half her class level (minimum 1) to all Knowledge skill checks and may make Knowledge checks untrained.' },
 		{ level: 1, name: 'Bardic Performance', description: 'A bard can use music or poetics to produce magical effects for a number of rounds per day equal to 4 + her Charisma modifier, gaining more rounds each level; starting a performance is a standard action.' },

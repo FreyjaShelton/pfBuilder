@@ -10,9 +10,18 @@ import { getBaseAttackBonus, getSaveBonuses, formatSigned, formatBaseAttackBonus
 import { getCMB, getCMD, getCombatManeuverSizeModifier } from '../../utils/combatStats';
 import { getWornArmorAndShields, getArmorClass } from '../../utils/armorClass';
 import { getWeaponStats } from '../../utils/weaponAttack';
-import { getTotalHitPoints } from '../../utils/hitPoints';
+import { getTotalHitPoints, getAdditionalClassHitPoints } from '../../utils/hitPoints';
 import { getArmorAdjustedSpeed } from '../../utils/speed';
+import { getCarryingCapacity } from '../../utils/carryingCapacity';
+import {
+	getTotalCharacterLevel, getCombinedBab, getCombinedSaveBonuses,
+	getCombinedClassSkills, getCombinedSpecialAbilities,
+} from '../../utils/multiclass';
 import classesData from '../../data/classes';
+import multiclassArchetypes from '../../data/multiclassArchetypes';
+import spellsData from '../../data/spells';
+import { getSpellcastingStartLevel, getSpellsPerDayAtLevel, getSpellsKnownAtLevel } from '../../utils/spellSlots';
+import { getBonusSpellsAtLevel } from '../../utils/bonusSpells';
 import skillsList from '../../data/skills';
 import equipmentData from '../../data/equipment';
 import { parseCostToGold } from '../../utils/currency';
@@ -25,6 +34,10 @@ const alignmentAbbreviations = {
 	'Lawful Good': 'LG', 'Neutral Good': 'NG', 'Chaotic Good': 'CG',
 	'Lawful Neutral': 'LN', 'True Neutral': 'N', 'Chaotic Neutral': 'CN',
 	'Lawful Evil': 'LE', 'Neutral Evil': 'NE', 'Chaotic Evil': 'CE',
+};
+const abilityKeyByName = {
+	Strength: 'str', Dexterity: 'dex', Constitution: 'con',
+	Intelligence: 'int', Wisdom: 'wis', Charisma: 'cha',
 };
 
 const PdfEditor = () => {
@@ -70,10 +83,16 @@ const PdfEditor = () => {
 		});
 
 		// No dedicated "Class" field exists on this sheet, so Class + Level share the "Character Level" line.
-		firstPage.drawText(`${character.classInfo.className} ${character.classInfo.level}`.trim(), {
+		let classLevelLine = `${character.classInfo.className} ${character.classInfo.level}`.trim();
+		if (character.classInfo.multiclassType === 'Standard' && character.classInfo.secondaryClassName && character.classInfo.secondaryLevel) {
+			classLevelLine += ` / ${character.classInfo.secondaryClassName} ${character.classInfo.secondaryLevel}`;
+		} else if (character.classInfo.multiclassType === 'Variant' && character.classInfo.secondaryClassName) {
+			classLevelLine = `${character.classInfo.className} ${getTotalCharacterLevel(character.classInfo)} (${character.classInfo.secondaryClassName} Archetype)`;
+		}
+		firstPage.drawText(classLevelLine, {
 			x: 240,
 			y: 711,
-			size: 10
+			size: fitFontSize(helveticaFont, classLevelLine, 175, 10)
 		});
 
 		firstPage.drawText(deity, {
@@ -292,12 +311,12 @@ const PdfEditor = () => {
 		const combatLevel = Number(character.classInfo.level) || 1;
 		const combatRaceData = raceInfo[character.race.name];
 		const combatSize = combatRaceData?.size || 'Medium';
-		const combatBab = combatClassData ? getBaseAttackBonus(combatClassData.bab, combatLevel) : 0;
+		const combatBab = getCombinedBab(character.classInfo, classesData);
 		const strMod = getModifier(adjustedAbilities.str);
 		const dexMod = getModifier(adjustedAbilities.dex);
 		const conMod = getModifier(adjustedAbilities.con);
 		const wisMod = getModifier(adjustedAbilities.wis);
-		const saveBonuses = combatClassData ? getSaveBonuses(combatClassData.saves, combatLevel) : { fort: 0, ref: 0, will: 0 };
+		const saveBonuses = getCombinedSaveBonuses(character.classInfo, classesData);
 		const fortTotal = saveBonuses.fort + conMod;
 		const refTotal = saveBonuses.ref + dexMod;
 		const willTotal = saveBonuses.will + wisMod;
@@ -310,17 +329,21 @@ const PdfEditor = () => {
 		});
 		// #endregion Step 9: Saving Throws, Initiative, Attack Values (BAB/CMB/CMD)
 
-		const totalHp = combatClassData
+		const primaryHp = combatClassData
 			? getTotalHitPoints({ hitDie: combatClassData.hitDie, level: combatLevel, conMod })
 			: 0;
+		const secondaryClassData = character.classInfo.multiclassType === 'Standard'
+			? classesData[character.classInfo.secondaryClassName]
+			: null;
+		const secondaryHp = secondaryClassData
+			? getAdditionalClassHitPoints({
+				hitDie: secondaryClassData.hitDie, level: Number(character.classInfo.secondaryLevel) || 0, conMod,
+			})
+			: 0;
+		const totalHp = primaryHp + secondaryHp;
 
 		firstPage.drawText(`${totalHp}`, {
 			x: 242,
-			y: 659,
-			size: 12
-		});
-		firstPage.drawText("DR", {
-			x: 288,
 			y: 659,
 			size: 12
 		});
@@ -607,7 +630,7 @@ const PdfEditor = () => {
 
 		// #region Skill Row Computation
 		const selectedClassData = classesData[character.classInfo.className];
-		const classSkillNames = selectedClassData ? selectedClassData.classSkills : [];
+		const classSkillNames = selectedClassData ? getCombinedClassSkills(character.classInfo, classesData) : [];
 		const skillRows = skillsList.map((skillDef) => {
 			const entry = character.skills[skillDef.key] || { ranks: 0 };
 			const ranks = Number(entry.ranks) || 0;
@@ -1774,49 +1797,42 @@ const PdfEditor = () => {
 			size: 8
 		});
 
-		// Move amounts
-		secondPage.drawText("Light", {
+		// Move amounts (Light/Medium/Heavy Load, Lift Over Head/Off Ground, Drag or Push)
+		const raceSize = raceInfo[character.race.name]?.size ?? 'Medium';
+		const carryingCapacity = getCarryingCapacity(adjustedAbilities.str, raceSize);
+		const formatCapacity = (lbs) => adjustedAbilities.str === '' ? '' : `${lbs} lbs.`;
+		secondPage.drawText(formatCapacity(carryingCapacity.light), {
 			x: 73,
 			y: 174,
 			size: 8
 		});
-		secondPage.drawText("Head", {
+		secondPage.drawText(formatCapacity(carryingCapacity.liftOverHead), {
 			x: 144,
 			y: 174,
 			size: 8
 		});
-		secondPage.drawText("Med", {
+		secondPage.drawText(formatCapacity(carryingCapacity.medium), {
 			x: 73,
 			y: 155,
 			size: 8
 		});
-		secondPage.drawText("Ground", {
+		secondPage.drawText(formatCapacity(carryingCapacity.liftOffGround), {
 			x: 144,
 			y: 155,
 			size: 8
 		});
-		secondPage.drawText("Heavy", {
+		secondPage.drawText(formatCapacity(carryingCapacity.heavy), {
 			x: 73,
 			y: 137,
 			size: 8
 		});
-		secondPage.drawText("Drag", {
+		secondPage.drawText(formatCapacity(carryingCapacity.dragOrPush), {
 			x: 144,
 			y: 137,
 			size: 8
 		});
 
 		// Money
-		secondPage.drawText("Copper", {
-			x: 60,
-			y: 101,
-			size: 8
-		});
-		secondPage.drawText("Silver", {
-			x: 60,
-			y: 87,
-			size: 8
-		});
 		const totalSpentGold = character.equipment.selected.reduce((sum, item) => {
 			const equipmentItem = equipmentData.find((e) => e.name === item.name);
 			return sum + parseCostToGold(equipmentItem?.cost) * item.quantity;
@@ -1825,11 +1841,6 @@ const PdfEditor = () => {
 		secondPage.drawText(remainingGold === '' ? '' : `${Math.round(remainingGold * 100) / 100}`, {
 			x: 60,
 			y: 73,
-			size: 8
-		});
-		secondPage.drawText("Platinum", {
-			x: 60,
-			y: 58,
 			size: 8
 		});
 
@@ -1852,9 +1863,8 @@ const PdfEditor = () => {
 		// #region Special Abilities
 
 		const currentClassData = classesData[character.classInfo.className];
-		const currentLevel = Number(character.classInfo.level) || 1;
 		const specialAbilityNames = currentClassData
-			? currentClassData.specialByLevel.slice(0, currentLevel)
+			? getCombinedSpecialAbilities(character.classInfo, classesData, multiclassArchetypes)
 			: [];
 
 		const specialAbilityPositions = [
@@ -1882,500 +1892,108 @@ const PdfEditor = () => {
 
 		// #region Spells
 
+		// Combined "Spells Per Day" per spell level (0-9), summing every casting class the
+		// character has (primary, plus a secondary caster under Standard Multiclassing).
+		const spellcastingClassEntries = [
+			{ data: classesData[character.classInfo.className], level: combatLevel },
+		];
+		if (character.classInfo.multiclassType === 'Standard' && character.classInfo.secondaryClassName) {
+			spellcastingClassEntries.push({
+				data: classesData[character.classInfo.secondaryClassName],
+				level: Number(character.classInfo.secondaryLevel) || 0,
+			});
+		}
+		const activeCasters = spellcastingClassEntries
+			.filter(({ data: d }) => d && d.spellcasting && d.spellsPerDay)
+			.map(({ data: casterData, level: casterLevel }) => {
+				const abilityKey = abilityKeyByName[casterData.spellcasting.keyAbility];
+				return {
+					data: casterData,
+					level: casterLevel,
+					startLevel: getSpellcastingStartLevel(casterData),
+					abilityMod: getModifier(adjustedAbilities[abilityKey]),
+				};
+			});
+
+		const spellsPerDayByLevel = Array.from({ length: 10 }, (_, spellLevel) =>
+			activeCasters.reduce((sum, caster) =>
+				sum + getSpellsPerDayAtLevel(caster.data, caster.level, spellLevel, caster.startLevel), 0)
+		);
+
+		const spellsKnownByLevel = Array.from({ length: 10 }, (_, spellLevel) =>
+			activeCasters.reduce((sum, caster) =>
+				sum + getSpellsKnownAtLevel(caster.data, caster.level, spellLevel, caster.startLevel), 0)
+		);
+
+		// Save DC and bonus spells key off whichever caster actually has slots at that spell
+		// level (the first one, in primary-then-secondary order, that does).
+		const spellSaveDcByLevel = Array.from({ length: 10 }, (_, spellLevel) => {
+			const caster = activeCasters.find((c) => getSpellsPerDayAtLevel(c.data, c.level, spellLevel, c.startLevel) > 0);
+			return caster ? 10 + spellLevel + caster.abilityMod : 0;
+		});
+
+		const bonusSpellsByLevel = Array.from({ length: 10 }, (_, spellLevel) => {
+			if (spellLevel < 1) return 0;
+			const caster = activeCasters.find((c) => getSpellsPerDayAtLevel(c.data, c.level, spellLevel, c.startLevel) > 0);
+			return caster ? getBonusSpellsAtLevel(caster.abilityMod, spellLevel) : 0;
+		});
+
+		// Selected spell names, grouped by level and sorted alphabetically — combined across
+		// every class (this sheet has one shared Spells section, not one per class). Filtered to
+		// the classes the character currently casts from, since a spell picked under a class
+		// that's since been swapped out (primary changed, or secondary dropped/changed) stays in
+		// character.spells.selected until explicitly removed.
+		const activeCasterClassNames = activeCasters.map((c) => c.data.name);
+		const selectedSpellsByLevel = Array.from({ length: 10 }, () => []);
+		character.spells.selected.forEach((s) => {
+			if (s.level >= 0 && s.level <= 9 && activeCasterClassNames.includes(s.className)) {
+				selectedSpellsByLevel[s.level].push(s.name);
+			}
+		});
+		selectedSpellsByLevel.forEach((names) => names.sort((a, b) => a.localeCompare(b)));
+
 		// #region Spell stats
 
-		// level 0
-		secondPage.drawText("0", {
-			x: 436,
-			y: 689,
-			size: 12
-		});
-		secondPage.drawText("0", {
-			x: 465,
-			y: 689,
-			size: 12
-		});
-		secondPage.drawText("0", {
-			x: 527,
-			y: 689,
-			size: 12
-		});
+		const spellStatPositions = [689, 673, 654, 638, 620, 603, 585, 568, 550, 534];
+		const drawStatOrBlank = (value, x, y) => {
+			secondPage.drawText(value ? `${value}` : "", { x, y, size: 12 });
+		};
 
-		// level 1
-		secondPage.drawText("0", {
-			x: 436,
-			y: 673,
-			size: 12
-		});
-		secondPage.drawText("0", {
-			x: 465,
-			y: 673,
-			size: 12
-		});
-		secondPage.drawText("0", {
-			x: 527,
-			y: 673,
-			size: 12
-		});
-		secondPage.drawText("0", {
-			x: 558,
-			y: 673,
-			size: 12
-		});
-
-		// level 2
-		secondPage.drawText("0", {
-			x: 436,
-			y: 654,
-			size: 12
-		});
-		secondPage.drawText("0", {
-			x: 465,
-			y: 654,
-			size: 12
-		});
-		secondPage.drawText("0", {
-			x: 527,
-			y: 654,
-			size: 12
-		});
-		secondPage.drawText("0", {
-			x: 558,
-			y: 654,
-			size: 12
-		});
-
-		// level 3
-		secondPage.drawText("0", {
-			x: 436,
-			y: 638,
-			size: 12
-		});
-		secondPage.drawText("0", {
-			x: 465,
-			y: 638,
-			size: 12
-		});
-		secondPage.drawText("0", {
-			x: 527,
-			y: 638,
-			size: 12
-		});
-		secondPage.drawText("0", {
-			x: 558,
-			y: 638,
-			size: 12
-		});
-
-		// level 4
-		secondPage.drawText("0", {
-			x: 436,
-			y: 620,
-			size: 12
-		});
-		secondPage.drawText("0", {
-			x: 465,
-			y: 620,
-			size: 12
-		});
-		secondPage.drawText("0", {
-			x: 527,
-			y: 620,
-			size: 12
-		});
-		secondPage.drawText("0", {
-			x: 558,
-			y: 620,
-			size: 12
-		});
-
-		// level 5
-		secondPage.drawText("0", {
-			x: 436,
-			y: 603,
-			size: 12
-		});
-		secondPage.drawText("0", {
-			x: 465,
-			y: 603,
-			size: 12
-		});
-		secondPage.drawText("0", {
-			x: 527,
-			y: 603,
-			size: 12
-		});
-		secondPage.drawText("0", {
-			x: 558,
-			y: 603,
-			size: 12
-		});
-
-		// level 6
-		secondPage.drawText("0", {
-			x: 436,
-			y: 585,
-			size: 12
-		});
-		secondPage.drawText("0", {
-			x: 465,
-			y: 585,
-			size: 12
-		});
-		secondPage.drawText("0", {
-			x: 527,
-			y: 585,
-			size: 12
-		});
-		secondPage.drawText("0", {
-			x: 558,
-			y: 585,
-			size: 12
-		});
-
-		// level 7
-		secondPage.drawText("0", {
-			x: 436,
-			y: 568,
-			size: 12
-		});
-		secondPage.drawText("0", {
-			x: 465,
-			y: 568,
-			size: 12
-		});
-		secondPage.drawText("0", {
-			x: 527,
-			y: 568,
-			size: 12
-		});
-		secondPage.drawText("0", {
-			x: 558,
-			y: 568,
-			size: 12
-		});
-
-		// level 8
-		secondPage.drawText("0", {
-			x: 436,
-			y: 550,
-			size: 12
-		});
-		secondPage.drawText("0", {
-			x: 465,
-			y: 550,
-			size: 12
-		});
-		secondPage.drawText("0", {
-			x: 527,
-			y: 550,
-			size: 12
-		});
-		secondPage.drawText("0", {
-			x: 558,
-			y: 550,
-			size: 12
-		});
-
-		// level 9
-		secondPage.drawText("0", {
-			x: 436,
-			y: 534,
-			size: 12
-		});
-		secondPage.drawText("0", {
-			x: 465,
-			y: 534,
-			size: 12
-		});
-		secondPage.drawText("0", {
-			x: 527,
-			y: 534,
-			size: 12
-		});
-		secondPage.drawText("0", {
-			x: 558,
-			y: 534,
-			size: 12
+		spellStatPositions.forEach((y, spellLevel) => {
+			drawStatOrBlank(spellsKnownByLevel[spellLevel], 436, y);
+			drawStatOrBlank(spellSaveDcByLevel[spellLevel], 465, y);
+			drawStatOrBlank(spellsPerDayByLevel[spellLevel], 527, y);
+			if (spellLevel >= 1) {
+				drawStatOrBlank(bonusSpellsByLevel[spellLevel], 558, y);
+			}
 		});
 
 		// #endregion Spell stats
 
 		// #region Spell list
 
-		// Level 0
-		secondPage.drawText("Spell", {
-			x: 436,
-			y: 456,
-			size: 8
-		});
-		secondPage.drawText("Spell", {
-			x: 436,
-			y: 449,
-			size: 8
-		});
-		secondPage.drawText("Spell", {
-			x: 436,
-			y: 442,
-			size: 8
-		});
-		secondPage.drawText("Spell", {
-			x: 436,
-			y: 435,
-			size: 8
-		});
-		secondPage.drawText("Spell", {
-			x: 436,
-			y: 428,
-			size: 8
-		});
-		secondPage.drawText("Spell", {
-			x: 436,
-			y: 421,
-			size: 8
-		});
-		secondPage.drawText("Spell", {
-			x: 436,
-			y: 414,
-			size: 8
-		});
-		secondPage.drawText("Spell", {
-			x: 436,
-			y: 407,
-			size: 8
-		});
+		const spellListPositionsByLevel = [
+			[456, 449, 442, 435, 428, 421, 414, 407], // Level 0
+			[393, 386, 380, 373, 366, 359, 352, 345], // Level 1
+			[330, 323, 316, 309, 303, 296, 289], // Level 2
+			[275, 268, 261, 255, 248, 241], // Level 3
+			[227, 220, 213, 206, 199], // Level 4
+			[186, 179, 172, 165], // Level 5
+			[152, 145, 138, 131], // Level 6
+			[117, 110, 103, 97], // Level 7
+			[83, 76, 69], // Level 8
+			[55, 47], // Level 9
+		];
 
-		// Level 1
-		secondPage.drawText("Spell", {
-			x: 436,
-			y: 393,
-			size: 8
-		});
-		secondPage.drawText("Spell", {
-			x: 436,
-			y: 386,
-			size: 8
-		});
-		secondPage.drawText("Spell", {
-			x: 436,
-			y: 380,
-			size: 8
-		});
-		secondPage.drawText("Spell", {
-			x: 436,
-			y: 373,
-			size: 8
-		});
-		secondPage.drawText("Spell", {
-			x: 436,
-			y: 366,
-			size: 8
-		});
-		secondPage.drawText("Spell", {
-			x: 436,
-			y: 359,
-			size: 8
-		});
-		secondPage.drawText("Spell", {
-			x: 436,
-			y: 352,
-			size: 8
-		});
-		secondPage.drawText("Spell", {
-			x: 436,
-			y: 345,
-			size: 8
-		});
-
-		// Level 2
-		secondPage.drawText("Spell", {
-			x: 436,
-			y: 330,
-			size: 8
-		});
-		secondPage.drawText("Spell", {
-			x: 436,
-			y: 323,
-			size: 8
-		});
-		secondPage.drawText("Spell", {
-			x: 436,
-			y: 316,
-			size: 8
-		});
-		secondPage.drawText("Spell", {
-			x: 436,
-			y: 309,
-			size: 8
-		});
-		secondPage.drawText("Spell", {
-			x: 436,
-			y: 303,
-			size: 8
-		});
-		secondPage.drawText("Spell", {
-			x: 436,
-			y: 296,
-			size: 8
-		});
-		secondPage.drawText("Spell", {
-			x: 436,
-			y: 289,
-			size: 8
-		});
-
-		// Level 3
-		secondPage.drawText("Spell", {
-			x: 436,
-			y: 275,
-			size: 8
-		});
-		secondPage.drawText("Spell", {
-			x: 436,
-			y: 268,
-			size: 8
-		});
-		secondPage.drawText("Spell", {
-			x: 436,
-			y: 261,
-			size: 8
-		});
-		secondPage.drawText("Spell", {
-			x: 436,
-			y: 255,
-			size: 8
-		});
-		secondPage.drawText("Spell", {
-			x: 436,
-			y: 248,
-			size: 8
-		});
-		secondPage.drawText("Spell", {
-			x: 436,
-			y: 241,
-			size: 8
-		});
-
-		// Level 4
-		secondPage.drawText("Spell", {
-			x: 436,
-			y: 227,
-			size: 8
-		});
-		secondPage.drawText("Spell", {
-			x: 436,
-			y: 220,
-			size: 8
-		});
-		secondPage.drawText("Spell", {
-			x: 436,
-			y: 213,
-			size: 8
-		});
-		secondPage.drawText("Spell", {
-			x: 436,
-			y: 206,
-			size: 8
-		});
-		secondPage.drawText("Spell", {
-			x: 436,
-			y: 199,
-			size: 8
-		});
-
-		// Level 5
-		secondPage.drawText("Spell", {
-			x: 436,
-			y: 186,
-			size: 8
-		});
-		secondPage.drawText("Spell", {
-			x: 436,
-			y: 179,
-			size: 8
-		});
-		secondPage.drawText("Spell", {
-			x: 436,
-			y: 172,
-			size: 8
-		});
-		secondPage.drawText("Spell", {
-			x: 436,
-			y: 165,
-			size: 8
-		});
-
-		// Level 6
-		secondPage.drawText("Spell", {
-			x: 436,
-			y: 152,
-			size: 8
-		});
-		secondPage.drawText("Spell", {
-			x: 436,
-			y: 145,
-			size: 8
-		});
-		secondPage.drawText("Spell", {
-			x: 436,
-			y: 138,
-			size: 8
-		});
-		secondPage.drawText("Spell", {
-			x: 436,
-			y: 131,
-			size: 8
-		});
-
-		// Level 7
-		secondPage.drawText("Spell", {
-			x: 436,
-			y: 117,
-			size: 8
-		});
-		secondPage.drawText("Spell", {
-			x: 436,
-			y: 110,
-			size: 8
-		});
-		secondPage.drawText("Spell", {
-			x: 436,
-			y: 103,
-			size: 8
-		});
-		secondPage.drawText("Spell", {
-			x: 436,
-			y: 97,
-			size: 8
-		});
-
-		// Level 8
-		secondPage.drawText("Spell", {
-			x: 436,
-			y: 83,
-			size: 8
-		});
-		secondPage.drawText("Spell", {
-			x: 436,
-			y: 76,
-			size: 8
-		});
-		secondPage.drawText("Spell", {
-			x: 436,
-			y: 69,
-			size: 8
-		});
-
-		// Level 9
-		secondPage.drawText("Spell", {
-			x: 436,
-			y: 55,
-			size: 8
-		});
-		secondPage.drawText("Spell", {
-			x: 436,
-			y: 47,
-			size: 8
+		spellListPositionsByLevel.forEach((positions, spellLevel) => {
+			const names = selectedSpellsByLevel[spellLevel];
+			positions.forEach((y, index) => {
+				secondPage.drawText(names[index] || "", {
+					x: 436,
+					y,
+					size: 8
+				});
+			});
 		});
 
 		// #endregion Spell list

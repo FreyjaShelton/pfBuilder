@@ -16,3 +16,12 @@ export function getTotalHitPoints({ hitDie, level, conMod }) {
 	const hitDieTotal = sides + (level - 1) * avgPerLevel;
 	return hitDieTotal + conMod * level;
 }
+
+// Hit points contributed by a secondary (multiclass) class — every level here uses the average
+// hit die value, since only the very first level a character ever takes (always in the primary
+// class) gets the max-hit-die bonus.
+export function getAdditionalClassHitPoints({ hitDie, level, conMod }) {
+	if (!hitDie || !level) return 0;
+	const avgPerLevel = getAverageHitDieValue(hitDie);
+	return avgPerLevel * level + conMod * level;
+}

@@ -38,6 +38,28 @@ const ranger = {
 		style: 'Prepared',
 		description: 'Rangers begin casting a small number of divine spells at 4th level, preparing them after an hour of communing with nature; their effective caster level equals ranger level minus 3.',
 	},
+	spellsPerDay: [
+		[0, 0, 0, 0], // 1
+		[0, 0, 0, 0], // 2
+		[0, 0, 0, 0], // 3
+		[0, 0, 0, 0], // 4
+		[1, 0, 0, 0], // 5
+		[1, 0, 0, 0], // 6
+		[1, 0, 0, 0], // 7
+		[1, 1, 0, 0], // 8
+		[2, 1, 0, 0], // 9
+		[2, 1, 0, 0], // 10
+		[2, 1, 1, 0], // 11
+		[2, 2, 1, 0], // 12
+		[3, 2, 1, 0], // 13
+		[3, 2, 1, 1], // 14
+		[3, 2, 2, 1], // 15
+		[3, 3, 2, 1], // 16
+		[4, 3, 2, 1], // 17
+		[4, 3, 2, 2], // 18
+		[4, 3, 3, 2], // 19
+		[4, 4, 3, 3], // 20
+	],
 	features: [
 		{ level: 1, name: 'Favored Enemy', description: 'The ranger selects a favored creature type, gaining +2 on Bluff, Knowledge, Perception, Sense Motive, and Survival checks against it, plus +2 on attack and damage rolls; she gains an additional favored enemy (or increases an existing bonus) at 5th, 10th, 15th, and 20th level.' },
 		{ level: 1, name: 'Track', description: 'The ranger adds half her level (minimum 1) to Survival checks made to follow tracks.' },

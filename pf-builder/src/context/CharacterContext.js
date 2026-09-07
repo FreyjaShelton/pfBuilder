@@ -13,7 +13,10 @@ const initialCharacter = {
 		name: '', player: '', alignment: '', deity: '', homeland: '',
 		gender: '', age: '', height: '', weight: '', hair: '', eyes: '',
 	},
-	classInfo: { className: '', level: '' },
+	classInfo: {
+		className: '', level: '',
+		multiclassType: '', secondaryClassName: '', secondaryLevel: '',
+	},
 	race: { name: '', abilityChoice: '' },
 	abilities: {
 		str: '', dex: '', con: '', int: '', wis: '', cha: '',
@@ -22,6 +25,7 @@ const initialCharacter = {
 	skills: initialSkills,
 	feats: { selected: [] },
 	equipment: { selected: [], goldMethod: '', gold: '' },
+	spells: { selected: [] },
 };
 
 export function CharacterProvider({ children }) {
@@ -39,6 +43,7 @@ export function CharacterProvider({ children }) {
 		updateSkills: updateSection('skills'),
 		updateFeats: updateSection('feats'),
 		updateEquipment: updateSection('equipment'),
+		updateSpells: updateSection('spells'),
 	};
 
 	return (

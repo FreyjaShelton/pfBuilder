@@ -10,7 +10,8 @@ import feats from '../../data/feats';
 import classesData from '../../data/classes';
 import PageHeader from '../../components/PageHeader';
 import { getStepEyebrow } from '../../data/wizardSteps';
-import { getTotalFeatAllotment } from '../../utils/featAllotment';
+import multiclassArchetypes from '../../data/multiclassArchetypes';
+import { getTotalFeatAllotment } from '../../utils/multiclass';
 
 const categories = ['All', 'General', 'Combat', 'Critical'];
 
@@ -20,10 +21,8 @@ export default function Feats() {
 	const [search, setSearch] = React.useState('');
 	const [category, setCategory] = React.useState('All');
 
-	const classData = classesData[character.classInfo.className];
-	const level = Number(character.classInfo.level) || 1;
 	const raceName = character.race.name;
-	const allotment = getTotalFeatAllotment({ classData, level, raceName });
+	const allotment = getTotalFeatAllotment(character.classInfo, classesData, multiclassArchetypes, raceName);
 	const atLimit = selected.length >= allotment;
 
 	const toggleFeat = (name) => {

@@ -12,18 +12,18 @@ import racesData from '../../data/races';
 import skillsList from '../../data/skills';
 import PageHeader from '../../components/PageHeader';
 import { getStepEyebrow } from '../../data/wizardSteps';
+import { getTotalCharacterLevel, getCombinedClassSkills, getCombinedSkillBudget } from '../../utils/multiclass';
 
 const abilityLabels = { str: 'STR', dex: 'DEX', con: 'CON', int: 'INT', wis: 'WIS', cha: 'CHA' };
 
 export default function Skills() {
 	const { character, updateSkills } = useCharacter();
 	const classData = classesData[character.classInfo.className];
-	const level = Number(character.classInfo.level) || 1;
+	const level = getTotalCharacterLevel(character.classInfo);
 	const racialMods = getRacialModifiers(racesData[character.race.name], character.race.abilityChoice);
 	const intMod = getModifier(character.abilities.int === '' ? '' : Number(character.abilities.int) + racialMods.int);
-	const ranksPerLevel = classData ? Math.max(1, classData.skillRanksPerLevel + intMod) : 0;
-	const totalBudget = classData ? ranksPerLevel * level : 0;
-	const classSkillNames = classData ? classData.classSkills : [];
+	const totalBudget = classData ? getCombinedSkillBudget(character.classInfo, classesData, intMod) : 0;
+	const classSkillNames = classData ? getCombinedClassSkills(character.classInfo, classesData) : [];
 
 	const raceData = racesData[character.race.name];
 	const raceSkillBonuses = raceData?.skillBonuses || [];
@@ -83,7 +83,15 @@ export default function Skills() {
 								</Typography>
 							</Box>
 							<Typography variant="caption" sx={{ display: 'block', color: 'text.secondary', marginBottom: 2 }}>
-								{classData.skillRanksPerLevel} + {intMod} Int mod, minimum 1/level, × level {level}
+								{character.classInfo.multiclassType === 'Standard' && character.classInfo.secondaryClassName ? (
+									<>
+										{character.classInfo.className}: {classData.skillRanksPerLevel} + {intMod} Int mod, minimum 1/level, × level {character.classInfo.level}
+										{' · '}
+										{character.classInfo.secondaryClassName}: {classesData[character.classInfo.secondaryClassName]?.skillRanksPerLevel} + {intMod} Int mod, minimum 1/level, × level {character.classInfo.secondaryLevel}
+									</>
+								) : (
+									<>{classData.skillRanksPerLevel} + {intMod} Int mod, minimum 1/level, × level {level}</>
+								)}
 							</Typography>
 
 							{/* Desktop / tablet: full table */}

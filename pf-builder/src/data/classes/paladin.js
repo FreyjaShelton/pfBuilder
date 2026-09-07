@@ -38,6 +38,28 @@ const paladin = {
 		style: 'Prepared',
 		description: 'Paladins begin casting a small number of divine spells at 4th level, preparing them after an hour of prayer; their effective caster level equals paladin level minus 3.',
 	},
+	spellsPerDay: [
+		[0, 0, 0, 0], // 1
+		[0, 0, 0, 0], // 2
+		[0, 0, 0, 0], // 3
+		[0, 0, 0, 0], // 4
+		[1, 0, 0, 0], // 5
+		[1, 0, 0, 0], // 6
+		[1, 0, 0, 0], // 7
+		[1, 1, 0, 0], // 8
+		[2, 1, 0, 0], // 9
+		[2, 1, 0, 0], // 10
+		[2, 1, 1, 0], // 11
+		[2, 2, 1, 0], // 12
+		[3, 2, 1, 0], // 13
+		[3, 2, 1, 1], // 14
+		[3, 2, 2, 1], // 15
+		[3, 3, 2, 1], // 16
+		[4, 3, 2, 1], // 17
+		[4, 3, 2, 2], // 18
+		[4, 3, 3, 2], // 19
+		[4, 4, 3, 3], // 20
+	],
 	features: [
 		{ level: 1, name: 'Aura of Good', description: 'The paladin radiates a magical aura of good whose power scales with paladin level, as detected by the detect good spell.' },
 		{ level: 1, name: 'Detect Evil', description: 'At will, the paladin can concentrate on a single target as a move action to detect evil creatures, objects, or auras within 60 feet.' },
